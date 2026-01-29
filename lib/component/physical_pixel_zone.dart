@@ -1,9 +1,8 @@
+/// component/physical_pixel_zone.dart
+///
+/// Created by longzhi on 2024/7/29
 import 'package:flutter/cupertino.dart';
 
-/// physical_pixel_zone.dart
-///
-/// Created by @YuAn on 2025/11/28 23:49.
-/// Copyright © 2025 Mountain. All rights reserved.
 // ==========================================================
 // 物理像素精准控制组件 (PhysicalPixelZone)
 // ==========================================================
@@ -43,7 +42,7 @@ class PhysicalPixelZone extends StatelessWidget {
     final double scale = 1.0 / dpr;
 
     return Transform.scale(
-      //进行缩放
+      // 4. 进行缩放
       //    我们将子节点的所有逻辑尺寸都缩小dpr倍。
       //    当渲染引擎将这些逻辑尺寸转换为物理像素时 (乘以dpr)，
       //    (逻辑尺寸 * scale) * dpr = (逻辑尺寸 / dpr) * dpr = 逻辑尺寸

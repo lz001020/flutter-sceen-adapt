@@ -1,13 +1,16 @@
-import 'package:flutter/widgets.dart'; // For State, StatefulWidget, VoidCallback
+/// base/extension.dart
+///
+/// Created by longzhi on 2024/7/29
+import 'package:flutter/widgets.dart'; // 用于 State, StatefulWidget, VoidCallback
 
-/// A mixin to safely call setState on a mounted widget.
+/// 一个用于在挂载的窗口小部件上安全调用 setState 的 mixin。
 mixin StateAble<T extends StatefulWidget> on State<T> {
   @override
   void setState(VoidCallback fn) {
     if (!mounted || !context.mounted) {
-      // This widget has been unmounted,
+      // 此小部件已卸载，
       return;
     }
-    super.setState(fn);
+    super.setState(fn); 
   }
 }

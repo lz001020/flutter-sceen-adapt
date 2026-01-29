@@ -1,3 +1,6 @@
+/// core/screen_size_utils.dart
+///
+/// Created by longzhi on 2024/7/29
 import 'dart:io';
 import 'dart:ui';
 
@@ -99,7 +102,10 @@ class ScreenSizeUtils {
         scale = currentHeight / designSize.height;
         break;
       case ScreenAdaptType.min:
-        scale = (currentWidth < currentHeight ? currentWidth : currentHeight) / (designSize.width < designSize.height ? designSize.width : designSize.height);
+        scale = (currentWidth < currentHeight ? currentWidth : currentHeight) /
+            (designSize.width < designSize.height
+                ? designSize.width
+                : designSize.height);
         break;
     }
 

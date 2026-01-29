@@ -1,19 +1,21 @@
+/// core/bindings.dart
+///
+/// Created by longzhi on 2024/7/29
 import 'dart:async';
 import 'dart:collection';
-import 'dart:ui' as ui; // 显式导入 ui.PointerDataPacket
-import 'dart:ui'; // 显式导入 PlatformDispatcher, Size, FlutterErrorDetails
+import 'dart:ui' as ui;
+import 'dart:ui';
 
-import 'package:flutter/gestures.dart'; // 显式导入 PointerEventConverter
-import 'package:flutter/material.dart'; // 显式导入 WidgetsBinding, ErrorDescription
-import 'package:flutter/rendering.dart'; // 显式导入 ViewConfiguration, RenderView
-import 'package:flutter/widgets.dart'; // 显式导入 Widget, MediaQuery 等
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/widgets.dart';
 
 import 'package:screen_adapt/core/screen_size_utils.dart';
-import 'package:screen_adapt/widgets/design_size_widget.dart'; // 显式导入 DesignSizeWidget
+import 'package:screen_adapt/widgets/design_size_widget.dart';
 
 /// 一个自定义的[WidgetsFlutterBinding]，用于提供全局的屏幕适配能力。
 class DesignSizeWidgetsFlutterBinding extends WidgetsFlutterBinding {
-
   /// 使用给定的设计稿尺寸和适配类型初始化绑定。
   ///
   /// [designSize] 是设计稿的逻辑尺寸 (例如: Size(360, 690))。
@@ -60,7 +62,7 @@ class DesignSizeWidgetsFlutterBinding extends WidgetsFlutterBinding {
     final view = platformDispatcher.implicitView!;
 
     final mediaQueryData = ScreenSizeUtils.instance.data;
-    rootWidget =  MediaQuery(
+    rootWidget = MediaQuery(
       data: mediaQueryData,
       child: rootWidget,
     );
@@ -68,11 +70,11 @@ class DesignSizeWidgetsFlutterBinding extends WidgetsFlutterBinding {
     return View(view: view, child: DesignSizeWidget(child: rootWidget));
   }
 
-  /// 步骤3：Hook GestureBinding 以处理手势
+  /// 步骤3：挂钩 GestureBinding 以处理手势
   @override
   void initInstances() {
     super.initInstances();
-    //hooks GestureBinding
+    // F GestureBinding
     PlatformDispatcher.instance.onPointerDataPacket = _handlePointerDataPacket;
   }
 
