@@ -39,6 +39,12 @@ class ScreenSizeUtils {
   /// 当前缩放比例
   double scale = defaultScale;
 
+  /// 是否让字体跟随 UI 进行缩放
+  bool scaleText = true;
+
+  /// 是否支持系统字体缩放大小设置
+  bool supportSystemTextScale = true;
+
   /// 是否为桌面平台
   bool _isDesktop = false;
 
@@ -52,10 +58,18 @@ class ScreenSizeUtils {
 
   ScreenSizeUtils._internal();
 
-  /// 设置设计稿尺寸以及可选的适配类型。
-  void setDesignSize(Size size, {ScreenAdaptType type = ScreenAdaptType.width}) {
+  /// 设置设计稿尺寸以及可选的适配类型和字体策略。
+  void setDesignSize(
+    Size size, {
+    ScreenAdaptType type = ScreenAdaptType.width,
+    bool scaleText = true,
+    bool supportSystemTextScale = true,
+  }) {
     designSize = size;
     adaptType = type;
+    this.scaleText = scaleText;
+    this.supportSystemTextScale = supportSystemTextScale;
+    
     if (Platform.isLinux || Platform.isMacOS || Platform.isWindows) {
       _isDesktop = true;
     }
@@ -72,6 +86,8 @@ class ScreenSizeUtils {
       designSize = designSize.flipped;
     }
     scale = defaultScale;
+    scaleText = true;
+    supportSystemTextScale = true;
   }
 
   /// 根据所选的 [adaptType] 设置屏幕适配参数。
@@ -117,12 +133,29 @@ extension MediaQueryDataExtension on MediaQueryData {
   /// 基于[ScreenSizeUtils]中的缩放比例[scale]来适配当前的[MediaQueryData]
   MediaQueryData design() {
     final scale = ScreenSizeUtils.instance.scale;
+    
+    // 处理字体缩放策略
+    double fontScaleFactor = 1.0;
+    
+    // 1. 是否支持系统字体缩放大小 (大字体模式)
+    if (ScreenSizeUtils.instance.supportSystemTextScale) {
+      fontScaleFactor = textScaler.scale(1); 
+    }
+    
+    // 2. 字体是否跟随屏幕适配的 scale 一起缩放
+    if (!ScreenSizeUtils.instance.scaleText) {
+      // 因为底层 devicePixelRatio 被乘了 scale，所以字体在物理屏幕上会被放大 scale 倍
+      // 如果不希望字体随屏幕缩放，我们需要在这里除以 scale 来抵消它
+      fontScaleFactor = fontScaleFactor / scale;
+    }
+
     return copyWith(
       size: size / scale,
       devicePixelRatio: devicePixelRatio * scale,
       viewInsets: viewInsets / scale,
       viewPadding: viewPadding / scale,
       padding: padding / scale,
+      textScaler: TextScaler.linear(fontScaleFactor),
     );
   }
 }

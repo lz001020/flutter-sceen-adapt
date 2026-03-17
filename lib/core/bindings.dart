@@ -21,10 +21,17 @@ class DesignSizeWidgetsFlutterBinding extends WidgetsFlutterBinding {
   /// [adaptType] 是屏幕适配的基准类型 (默认为 [ScreenAdaptType.width])。
   DesignSizeWidgetsFlutterBinding(
     Size designSize, {
-    ScreenAdaptType adaptType = ScreenAdaptType.width,
+    ScreenAdaptType adaptType = ScreenAdaptType.min,
+    bool scaleText = true,
+    bool supportSystemTextScale = true,
   }) {
     // 在绑定初始化时，立即设置设计稿尺寸和适配类型。
-    ScreenSizeUtils.instance.setDesignSize(designSize, type: adaptType);
+    ScreenSizeUtils.instance.setDesignSize(
+      designSize,
+      type: adaptType,
+      scaleText: scaleText,
+      supportSystemTextScale: supportSystemTextScale,
+    );
   }
 
   /// 确保自定义的绑定已经被初始化。
@@ -32,10 +39,17 @@ class DesignSizeWidgetsFlutterBinding extends WidgetsFlutterBinding {
   /// 这是在 `main` 函数中启动屏幕适配的首选方法。
   static WidgetsBinding ensureInitialized(
     Size size, {
-    ScreenAdaptType type = ScreenAdaptType.width,
+    ScreenAdaptType type = ScreenAdaptType.min,
+    bool scaleText = true,
+    bool supportSystemTextScale = true,
   }) {
     // 调用构造函数来创建并注册绑定实例
-    DesignSizeWidgetsFlutterBinding(size, adaptType: type);
+    DesignSizeWidgetsFlutterBinding(
+      size,
+      adaptType: type,
+      scaleText: scaleText,
+      supportSystemTextScale: supportSystemTextScale,
+    );
     return WidgetsBinding.instance;
   }
 
