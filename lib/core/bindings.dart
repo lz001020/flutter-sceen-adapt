@@ -10,7 +10,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
-
 import 'package:screen_adapt/core/screen_size_utils.dart';
 import 'package:screen_adapt/widgets/design_size_widget.dart';
 
@@ -74,7 +73,7 @@ class DesignSizeWidgetsFlutterBinding extends WidgetsFlutterBinding {
   @override
   void initInstances() {
     super.initInstances();
-    // F GestureBinding
+    // 关键点：将引擎层的手势包处理逻辑重定向到我们自定义的函数
     PlatformDispatcher.instance.onPointerDataPacket = _handlePointerDataPacket;
   }
 
@@ -86,10 +85,10 @@ class DesignSizeWidgetsFlutterBinding extends WidgetsFlutterBinding {
 
   final Queue<PointerEvent> _pendingPointerEvents = Queue<PointerEvent>();
 
-  _handlePointerDataPacket(ui.PointerDataPacket packet) {
+  void _handlePointerDataPacket(ui.PointerDataPacket packet) {
     try {
       _pendingPointerEvents.addAll(
-          PointerEventConverter.expand(packet.data, _devicePixelRatioForView));
+          PointerEventConverter.expand(packet.data, _getAdaptedDevicePixelRatio));
       if (!locked) {
         _flushPointerEventQueue();
       }
@@ -103,11 +102,19 @@ class DesignSizeWidgetsFlutterBinding extends WidgetsFlutterBinding {
     }
   }
 
-  double? _devicePixelRatioForView(int viewId) {
-    if (viewId == 0) {
+  // 动态获取 DPR
+  double? _getAdaptedDevicePixelRatio(int viewId) {
+    // 获取当前视图的原始 DPR
+    final view = platformDispatcher.view(id: viewId);
+    if (view == null) return null;
+
+    // 如果是主视图（或者是我们正在适配的视图），应用缩放比例
+    // 通常 implicitView 是我们要适配的对象
+    if (viewId == platformDispatcher.implicitView?.viewId) {
       return ScreenSizeUtils.instance.data.devicePixelRatio;
     }
-    return platformDispatcher.view(id: viewId)?.devicePixelRatio;
+
+    return view.devicePixelRatio;
   }
 
   @override
@@ -123,6 +130,17 @@ class DesignSizeWidgetsFlutterBinding extends WidgetsFlutterBinding {
 
     while (_pendingPointerEvents.isNotEmpty) {
       handlePointerEvent(_pendingPointerEvents.removeFirst());
+    }
+  }
+
+  @override
+  void handleMetricsChanged() {
+    super.handleMetricsChanged();
+    // 屏幕参数改变时，重新计算缩放并通知渲染树
+    ScreenSizeUtils.instance.setup();
+    // 强制更新 RenderView 的配置
+    for (var renderView in renderViews) {
+      renderView.configuration = createViewConfigurationFor(renderView);
     }
   }
 }

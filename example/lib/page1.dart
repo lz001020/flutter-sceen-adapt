@@ -60,7 +60,7 @@ class _Page1State extends State<Page1> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          Navigator.of(context).pushNamed("/page2");
+          Navigator.of(context).pushNamed("/demo3");
         },
         child: const Icon(Icons.pages_rounded),
       ),

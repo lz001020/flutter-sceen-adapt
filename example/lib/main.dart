@@ -6,6 +6,7 @@ import 'package:example/page2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:screen_adapt/screen_adapt.dart';
+import 'package:example/demo3/pointer_test_page.dart';
 
 
 void main() {
@@ -30,7 +31,7 @@ class MyApp extends StatelessWidget {
       initialRoute: "/page1",
       routes: {
         "/page1": (context) => const Page1(),
-        "/page2": (context) => const Page2()
+        "/page2": (context) => const Page2(), "/demo3": (context) => const PointerTestPage()
       },
     );
   }
