@@ -30,15 +30,6 @@ class LayoutBlock extends StatelessWidget {
             ),
           ],
         ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            color: Colors.purple.shade50,
-            width: 250 ,
-            height: 250,
-            child: Center(child: Text("250 x 250")),
-          ),
-        ),
         // --- START: 新增的代码 ---
         // 为了视觉上分开，我加了一个10像素的间距
         const SizedBox(height: 10),
@@ -54,7 +45,7 @@ class LayoutBlock extends StatelessWidget {
                 width: 250,
                 height: 250,
                 color: Colors.blue.shade50,
-                child: Center(child: Text("又一个 250 x 250")),
+                child: Text("又一个 250 x 250"),
               ),
             ),
           ),

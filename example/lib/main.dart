@@ -1,16 +1,19 @@
 import 'dart:io';
-import 'dart:ui';
 
+import 'package:example/demo3/pointer_test_page.dart';
 import 'package:example/page1.dart';
 import 'package:example/page2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:screen_adapt/screen_adapt.dart';
-import 'package:example/demo3/pointer_test_page.dart';
 
 
 void main() {
-  DesignSizeWidgetsFlutterBinding.ensureInitialized(const Size(375, 667));
+  DesignSizeWidgetsFlutterBinding.ensureInitialized(
+    const Size(375, 667),
+    scaleText: true,
+    supportSystemTextScale: false,
+  );
   if (Platform.isAndroid) {
     SystemChrome.setSystemUIOverlayStyle(
         const SystemUiOverlayStyle(statusBarColor: Colors.transparent));

@@ -24,7 +24,7 @@ class _Page1State extends State<Page1> {
       appBar: AppBar(
         title: const Text(
           "Page1",
-          style: TextStyle(fontWeight: FontWeight.w500),
+          style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15),
         ),
         actions: [
           Padding(
