@@ -36,7 +36,7 @@ class LayoutBlock extends StatelessWidget {
 
         // 这是新增的另一个 250x250 未适配容器
         MediaQuery(
-          data: ScreenSizeUtils.instance.originData,
+          data: ScreenSizeUtils.instance.originData ?? MediaQuery.of(context),
           child: UnscaledZone(
             child: Align(
               alignment: Alignment.centerLeft,

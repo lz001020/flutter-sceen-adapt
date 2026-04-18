@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:example/demo3/pointer_test_page.dart';
 import 'package:example/page1.dart';
 import 'package:example/page2.dart';
+import 'package:example/platform_view_demo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:screen_adapt/screen_adapt.dart';
@@ -34,7 +35,9 @@ class MyApp extends StatelessWidget {
       initialRoute: "/page1",
       routes: {
         "/page1": (context) => const Page1(),
-        "/page2": (context) => const Page2(), "/demo3": (context) => const PointerTestPage()
+        "/page2": (context) => const Page2(),
+        "/demo3": (context) => const PointerTestPage(),
+        "/platform_view_demo": (context) => const PlatformViewDemoPage(),
       },
     );
   }

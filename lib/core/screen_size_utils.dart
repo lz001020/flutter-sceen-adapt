@@ -28,7 +28,7 @@ class ScreenSizeUtils {
   ScreenAdaptType adaptType = ScreenAdaptType.width;
 
   /// 原始的MediaQueryData
-  late MediaQueryData originData;
+  MediaQueryData? originData;
 
   /// 适配后的MediaQueryData
   late MediaQueryData data;
@@ -80,7 +80,7 @@ class ScreenSizeUtils {
   reset() {
     final view = PlatformDispatcher.instance.views.first;
     originData = MediaQueryData.fromView(view);
-    designSize = originData.size; // 将设计稿尺寸重置为当前屏幕尺寸
+    designSize = originData!.size; // 将设计稿尺寸重置为当前屏幕尺寸
     if (designSize.width > designSize.height && !_isDesktop) {
       // 横竖屏切换
       designSize = designSize.flipped;
@@ -96,18 +96,18 @@ class ScreenSizeUtils {
     originData = MediaQueryData.fromView(view);
 
     if (_isDesktop && scale != defaultScale) {
-      data = originData.design(); // 对于桌面端，如果 scale 是自定义的，则应用它
+      data = originData!.design(); // 对于桌面端，如果 scale 是自定义的，则应用它
       return;
     }
 
-    double currentWidth = originData.size.width;
-    double currentHeight = originData.size.height;
+    double currentWidth = originData!.size.width;
+    double currentHeight = originData!.size.height;
 
     // 处理非桌面设备的横屏情况
     if (view.physicalSize.width > view.physicalSize.height && !_isDesktop) {
       // 在横屏模式下，如果按宽度或最小值适配，则翻转参考尺寸
-      currentWidth = originData.size.height; // 使用高度作为横屏适配的有效宽度
-      currentHeight = originData.size.width; // 使用宽度作为有效高度
+      currentWidth = originData!.size.height; // 使用高度作为横屏适配的有效宽度
+      currentHeight = originData!.size.width; // 使用宽度作为有效高度
     }
 
     switch (adaptType) {
@@ -125,7 +125,7 @@ class ScreenSizeUtils {
         break;
     }
 
-    data = originData.design();
+    data = originData!.design();
   }
 }
 

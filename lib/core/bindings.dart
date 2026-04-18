@@ -69,17 +69,11 @@ class DesignSizeWidgetsFlutterBinding extends WidgetsFlutterBinding {
     );
   }
 
-  /// 步骤2：在根 Widget 中替换 devicePixelRatio
+  /// 步骤2：在根 Widget 中接入适配容器
   @override
   Widget wrapWithDefaultView(Widget rootWidget) {
     final view = platformDispatcher.implicitView!;
-
-    final mediaQueryData = ScreenSizeUtils.instance.data;
-    rootWidget = MediaQuery(
-      data: mediaQueryData,
-      child: rootWidget,
-    );
-    // 注意: DesignSizeWidget 需要是可访问的，它位于 lib/widgets/design_size_widget.dart
+    // 只挂 DesignSizeWidget，由它基于最新 originData 生成 MediaQuery。
     return View(view: view, child: DesignSizeWidget(child: rootWidget));
   }
 

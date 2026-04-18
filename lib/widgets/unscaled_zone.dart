@@ -79,12 +79,13 @@ class UnscaledZone extends StatelessWidget {
           child: LayoutBuilder(
             builder: (context, constraints) {
               // 2. 修正布局约束。
-              final double inverseScale = 1.0 / scale;
+              // constraints 已经是压缩后的适配逻辑像素（÷ scale），
+              // 恢复到原始逻辑像素需要 × scale
               final BoxConstraints correctedConstraints = constraints.copyWith(
-                minWidth: constraints.minWidth * inverseScale,
-                maxWidth: constraints.maxWidth * inverseScale,
-                minHeight: constraints.minHeight * inverseScale,
-                maxHeight: constraints.maxHeight * inverseScale,
+                minWidth: constraints.minWidth * scale,
+                maxWidth: constraints.maxWidth * scale,
+                minHeight: constraints.minHeight * scale,
+                maxHeight: constraints.maxHeight * scale,
               );
 
               // 3. 使用 ConstrainedBox 应用修正后的约束。

@@ -45,8 +45,9 @@ class DesignSizeWidgetState extends State<DesignSizeWidget> with StateAble {
     // 检查是否已经存在 DesignSize 祖先
     final outerDesignSizeState = DesignSize.maybeOf(context);
 
-    // 无论如何都应用缩放逻辑。这确保了在 UnscaledZone 之后能正确恢复缩放。
-    final mediaQueryData = MediaQuery.of(context).design();
+    // 基于最新原始数据计算当前适配数据，保证 setDesignSize/reset 后立即生效。
+    final origin = ScreenSizeUtils.instance.originData;
+    final mediaQueryData = (origin ?? MediaQuery.of(context)).design();
 
     // 如果我们是顶层的 DesignSizeWidget，则提供 InheritedWidget。
     // 如果我们是嵌套的，则不需要提供另一个。任何后代小部件需要状态时，

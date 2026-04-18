@@ -25,32 +25,43 @@ class PhysicalPixelZone extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. 获取当前上下文的MediaQueryData
-    //    这里使用MediaQuery.of(context)而不是全局的原始数据，
-    //    是为了让PhysicalPixelZone可以嵌套在UnscaledZone或适配区内都能正常工作。
-    final mediaQueryData = MediaQuery.of(context);
+    final dpr = MediaQuery.of(context).devicePixelRatio;
 
-    // 2. 获取设备像素比 (DPR)
-    final dpr = mediaQueryData.devicePixelRatio;
-
-    // 如果dpr为1，说明1个逻辑像素正好等于1个物理像素，无需缩放。
     if (dpr == 1.0) {
       return child;
     }
 
-    // 3. 计算缩放比例，即DPR的倒数
-    final double scale = 1.0 / dpr;
+    // 逻辑：
+    // - 父级给出约束 w×h（适配后逻辑像素）
+    // - OverflowBox 放大约束为 w*dpr × h*dpr，供子节点以"物理像素"为单位布局
+    // - Transform.scale(1/dpr) 将视觉输出缩回 w×h，与父级布局槽匹配
+    // - ClipRect 裁剪防止溢出
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double physicalWidth = constraints.maxWidth * dpr;
+        final double physicalHeight = constraints.maxHeight * dpr;
 
-    return Transform.scale(
-      // 4. 进行缩放
-      //    我们将子节点的所有逻辑尺寸都缩小dpr倍。
-      //    当渲染引擎将这些逻辑尺寸转换为物理像素时 (乘以dpr)，
-      //    (逻辑尺寸 * scale) * dpr = (逻辑尺寸 / dpr) * dpr = 逻辑尺寸
-      //    这就实现了 1个逻辑单位 = 1个物理像素 的效果。
-      scale: scale,
-      // 5. 保证对齐方式为左上角，防止布局偏移
-      alignment: Alignment.topLeft,
-      child: child,
+        return SizedBox(
+          width: constraints.maxWidth,
+          height: constraints.maxHeight,
+          child: ClipRect(
+            child: OverflowBox(
+              alignment: Alignment.topLeft,
+              maxWidth: physicalWidth,
+              maxHeight: physicalHeight,
+              child: Transform.scale(
+                scale: 1.0 / dpr,
+                alignment: Alignment.topLeft,
+                child: SizedBox(
+                  width: physicalWidth,
+                  height: physicalHeight,
+                  child: child,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

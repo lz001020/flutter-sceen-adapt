@@ -58,11 +58,25 @@ class _Page1State extends State<Page1> {
 
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          Navigator.of(context).pushNamed("/demo3");
-        },
-        child: const Icon(Icons.pages_rounded),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FloatingActionButton(
+            heroTag: 'platform_view',
+            onPressed: () {
+              Navigator.of(context).pushNamed("/platform_view_demo");
+            },
+            child: const Icon(Icons.layers),
+          ),
+          const SizedBox(height: 10),
+          FloatingActionButton(
+            heroTag: 'demo3',
+            onPressed: () async {
+              Navigator.of(context).pushNamed("/demo3");
+            },
+            child: const Icon(Icons.pages_rounded),
+          ),
+        ],
       ),
     );
   }
