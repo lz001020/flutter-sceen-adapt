@@ -3,12 +3,8 @@ import 'package:screen_adapt/core/screen_size_utils.dart';
 
 /// 针对 PlatformView（如 WebView, Map, Video）的视觉对齐包装器。
 ///
-/// 在当前 Android 示例环境中，PlatformView 视觉表现会偏大，
-/// 这里采用“先缩小原生布局尺寸，再放大回父布局槽”的方式进行对齐：
-/// 1. 给原生视图传入 w/scale × h/scale 的布局尺寸
-/// 2. 再通过 Transform.scale(scale) 放大到 w×h
-///
-/// 这样可在示例中实现与 Flutter 布局槽一致的视觉填充效果。
+/// 以“当前 Flutter DPR / 原始 DPR”的比值作为补偿因子，
+/// 保证无论适配基准是 width/height/min，PlatformView 都与当前坐标体系一致。
 class AdaptedPlatformView extends StatelessWidget {
   const AdaptedPlatformView({
     super.key,
@@ -19,27 +15,36 @@ class AdaptedPlatformView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double scale = ScreenSizeUtils.instance.scale;
+    final origin = ScreenSizeUtils.instance.originData;
+    final adapted = MediaQuery.of(context);
 
-    if (scale == 1.0) return child;
+    final originDpr = origin?.devicePixelRatio ?? adapted.devicePixelRatio;
+    final adaptedDpr = adapted.devicePixelRatio;
+
+    if (originDpr == 0) return child;
+
+    final factor = adaptedDpr / originDpr;
+
+    if (factor == 1.0) return child;
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final double width = constraints.maxWidth;
-        final double height = constraints.maxHeight;
-        final double scaledWidth = width / scale;
-        final double scaledHeight = height / scale;
+        final width = constraints.maxWidth;
+        final height = constraints.maxHeight;
+
+        final childWidth = width / factor;
+        final childHeight = height / factor;
 
         return SizedBox(
           width: width,
           height: height,
           child: ClipRect(
             child: Transform.scale(
-              scale: scale,
+              scale: factor,
               alignment: Alignment.topLeft,
               child: SizedBox(
-                width: scaledWidth,
-                height: scaledHeight,
+                width: childWidth,
+                height: childHeight,
                 child: child,
               ),
             ),
