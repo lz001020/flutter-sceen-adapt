@@ -116,6 +116,10 @@ class MyHomePage extends StatelessWidget {
 在某些情况下，您可能希望局部区域不参与全局缩放，以保持其原始的像素尺寸。例如，显示第三方 UI 组件、绘制精确的像素图形等。此时，您可以使用 `UnscaledZone`。
 
 `UnscaledZone` 会在其子树中创建一个“隔离区”，恢复到设备原始的、未经缩放的尺寸体系。
+它支持两种模式：
+
+- `UnscaledZoneMode.contextFallback`（默认）：只回退子树上下文，`UnscaledZone` 自身仍按当前适配坐标系参与布局。
+- `UnscaledZoneMode.full`：彻底反适配，同时回退子树上下文以及 `UnscaledZone` 自身的占位/绘制/命中测试。
 
 **示例：**
 
@@ -150,7 +154,25 @@ Widget build(BuildContext context) {
 }
 ```
 
-**注意**: `UnscaledZone` 已经内置了对嵌套的保护，所以您可以安全地在组件内部使用它，而不用担心意外的嵌套导致布局错误。
+如果您希望 `UnscaledZone` 自身也按原始尺寸占位，请使用 `full` 模式：
+
+```dart
+UnscaledZone(
+  mode: UnscaledZoneMode.full,
+  child: Container(
+    width: 180,
+    height: 100,
+    color: Colors.orange,
+    child: const Center(child: Text('彻底反适配')),
+  ),
+)
+```
+
+**注意**:
+
+- `contextFallback` 更适合只想回退子树上下文的场景。
+- `full` 更适合普通 Flutter 组件需要连同占位一起恢复原始尺寸的场景。
+- `UnscaledZone` 已经内置了对嵌套的保护，所以您可以安全地在组件内部使用它，而不用担心意外的嵌套导致布局错误。
 
 ---
 

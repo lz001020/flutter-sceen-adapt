@@ -1,9 +1,26 @@
 /// widgets/unscaled_zone.dart
 ///
 /// Created by longzhi on 2024/7/29
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart'; // 用于 Widget, BuildContext, InheritedWidget, LayoutBuilder, ConstrainedBox
 
 import 'package:screen_adapt/core/screen_size_utils.dart'; // 用于 ScreenSizeUtils
+
+/// `UnscaledZone` 的反适配模式。
+enum UnscaledZoneMode {
+  /// 仅回退子树上下文。
+  ///
+  /// 此模式会恢复子树的 `MediaQuery`，并给子树传递放大后的约束，
+  /// 但 `UnscaledZone` 自身仍按父级当前的适配坐标系参与布局。
+  contextFallback,
+
+  /// 彻底反适配。
+  ///
+  /// 此模式除了恢复子树的 `MediaQuery` 外，还会在布局、绘制和命中测试
+  /// 三个层面一起反向缩放，使子树的尺寸语义和 `UnscaledZone` 自身的占位
+  /// 都回到原始坐标体系。
+  full,
+}
 
 /// 一个标记 InheritedWidget，用于检测是否已存在祖先 UnscaledZone。
 class _UnscaledZoneMarker extends InheritedWidget {
@@ -51,9 +68,11 @@ class UnscaledZone extends StatelessWidget {
   const UnscaledZone({
     super.key,
     required this.child,
+    this.mode = UnscaledZoneMode.contextFallback,
   });
 
   final Widget child;
+  final UnscaledZoneMode mode;
 
   @override
   Widget build(BuildContext context) {
@@ -76,25 +95,29 @@ class UnscaledZone extends StatelessWidget {
         // 1. 注入原始的 MediaQueryData。
         return MediaQuery(
           data: originalMediaQueryData,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              // 2. 修正布局约束。
-              // constraints 已经是压缩后的适配逻辑像素（÷ scale），
-              // 恢复到原始逻辑像素需要 × scale
-              final BoxConstraints correctedConstraints = constraints.copyWith(
-                minWidth: constraints.minWidth * scale,
-                maxWidth: constraints.maxWidth * scale,
-                minHeight: constraints.minHeight * scale,
-                maxHeight: constraints.maxHeight * scale,
-              );
+          child: switch (mode) {
+            UnscaledZoneMode.contextFallback => LayoutBuilder(
+                builder: (context, constraints) {
+                  // constraints 已经是压缩后的适配逻辑像素（÷ scale），
+                  // 恢复到原始逻辑像素可用空间需要 × scale。
+                  final BoxConstraints correctedConstraints = constraints.copyWith(
+                    minWidth: constraints.minWidth * scale,
+                    maxWidth: constraints.maxWidth * scale,
+                    minHeight: constraints.minHeight * scale,
+                    maxHeight: constraints.maxHeight * scale,
+                  );
 
-              // 3. 使用 ConstrainedBox 应用修正后的约束。
-              return ConstrainedBox(
-                constraints: correctedConstraints,
+                  return ConstrainedBox(
+                    constraints: correctedConstraints,
+                    child: child,
+                  );
+                },
+              ),
+            UnscaledZoneMode.full => _FullyUnscaledLayout(
+                scale: scale,
                 child: child,
-              );
-            },
-          ),
+              ),
+          },
         );
       },
     );
@@ -109,5 +132,126 @@ class UnscaledZone extends StatelessWidget {
         child: unscaledCore,
       );
     }
+  }
+}
+
+class _FullyUnscaledLayout extends SingleChildRenderObjectWidget {
+  const _FullyUnscaledLayout({
+    required this.scale,
+    required super.child,
+  });
+
+  final double scale;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) {
+    return _RenderFullyUnscaledLayout(scale);
+  }
+
+  @override
+  void updateRenderObject(
+      BuildContext context, covariant _RenderFullyUnscaledLayout renderObject) {
+    renderObject.scale = scale;
+  }
+}
+
+class _RenderFullyUnscaledLayout extends RenderProxyBox {
+  _RenderFullyUnscaledLayout(this._scale);
+
+  double _scale;
+
+  double get scale => _scale;
+
+  set scale(double value) {
+    if (_scale == value) return;
+    _scale = value;
+    markNeedsLayout();
+    markNeedsPaint();
+    markNeedsSemanticsUpdate();
+  }
+
+  BoxConstraints _scaledConstraints(BoxConstraints constraints) {
+    double scaleValue(double value) => value.isFinite ? value * scale : value;
+
+    return BoxConstraints(
+      minWidth: scaleValue(constraints.minWidth),
+      maxWidth: scaleValue(constraints.maxWidth),
+      minHeight: scaleValue(constraints.minHeight),
+      maxHeight: scaleValue(constraints.maxHeight),
+    );
+  }
+
+  Size _unscaledSize(Size childSize) {
+    return Size(childSize.width / scale, childSize.height / scale);
+  }
+
+  Matrix4 get _paintTransform =>
+      Matrix4.diagonal3Values(1.0 / scale, 1.0 / scale, 1.0);
+
+  @override
+  Size computeDryLayout(BoxConstraints constraints) {
+    final child = this.child;
+    if (child == null) {
+      return constraints.constrain(Size.zero);
+    }
+
+    final Size childSize = child.getDryLayout(_scaledConstraints(constraints));
+    return constraints.constrain(_unscaledSize(childSize));
+  }
+
+  @override
+  void performLayout() {
+    final child = this.child;
+    if (child == null) {
+      size = constraints.constrain(Size.zero);
+      return;
+    }
+
+    child.layout(_scaledConstraints(constraints), parentUsesSize: true);
+    size = constraints.constrain(_unscaledSize(child.size));
+  }
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    final child = this.child;
+    if (child == null) return false;
+
+    return result.addWithPaintTransform(
+      transform: _paintTransform,
+      position: position,
+      hitTest: (result, transformed) {
+        return child.hitTest(result, position: transformed);
+      },
+    );
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final child = this.child;
+    if (child == null) return;
+
+    context.pushClipRect(
+      needsCompositing,
+      offset,
+      offset & size,
+      (context, offset) {
+        final Matrix4 transform = Matrix4.identity()
+          ..translateByDouble(offset.dx, offset.dy, 0.0, 1.0)
+          ..scaleByDouble(1.0 / scale, 1.0 / scale, 1.0, 1.0);
+        context.pushTransform(
+          needsCompositing,
+          Offset.zero,
+          transform,
+          (context, offset) {
+            context.paintChild(child, Offset.zero);
+          },
+        );
+      },
+    );
+  }
+
+  @override
+  void applyPaintTransform(RenderBox child, Matrix4 transform) {
+    transform.scaleByDouble(1.0 / scale, 1.0 / scale, 1.0, 1.0);
   }
 }
