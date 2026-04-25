@@ -1,107 +1,73 @@
 # `screen_adapt` 使用指南
 
-欢迎使用 `screen_adapt`！这是一个为 Flutter 设计的、侵入性低且高性能的屏幕适配方案。本指南将引导您快速地在您的项目中使用它。
+本文档只回答两个问题：
 
----
+- 怎么接入
+- 遇到局部特殊场景时该用哪个能力
 
-## 1. 安装
+如果你想看底层原理，读 [Concept.md](../../lib/doc/Concept.md)；如果你想看当前限制，读 [KnownIssues.md](../../lib/doc/KnownIssues.md)。
 
-将 `screen_adapt` 添加到您的 `pubspec.yaml` 文件的 `dependencies` 中：
+## 1. 接入
 
-```yaml
-dependencies:
-  flutter:
-    sdk: flutter
-  screen_adapt: ^latest_version # 请替换为最新的版本号
-```
-
-然后，在您的项目根目录运行 `flutter pub get` 来安装依赖。
-
----
-
-## 2. 快速开始：激活适配方案
-
-激活 `screen_adapt` 非常简单，只需在您的 `main.dart` 文件的 `main()` 函数中，在 `runApp()` 之前调用 `DesignSizeWidgetsFlutterBinding.ensureInitialized()` 即可。
-
-**这是唯一必须的步骤！**
+### 在 `main()` 里初始化 binding
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:screen_adapt/screen_adapt.dart'; // 1. 导入包
+import 'package:screen_adapt/screen_adapt.dart';
 
 void main() {
-  // 2. 定义您的设计稿尺寸
-  const Size designSize = Size(360, 690);
-
-  // 3. 在 runApp() 前初始化并激活适配方案
-  // 您可以在这里选择不同的适配模式
   DesignSizeWidgetsFlutterBinding.ensureInitialized(
-    designSize,
-    type: ScreenAdaptType.width, // 这是默认值，可以省略
+    const Size(375, 667),
   );
-
   runApp(const MyApp());
 }
 ```
 
-### 选择适配模式 (`ScreenAdaptType`)
+这是唯一必须的接入步骤。
 
-`ensureInitialized` 方法的 `type` 参数允许您选择适配的基准：
+初始化之后，Flutter 的全局逻辑坐标系会被映射到你的设计稿尺寸语义上。
 
-- **`ScreenAdaptType.width`** (默认): 基于屏幕**宽度**进行缩放。这是最常用的模式，可以确保应用在不同宽度的设备上布局一致。
-- **`ScreenAdaptType.height`**: 基于屏幕**高度**进行缩放。适用于内容高度固定的场景，如启动屏或某些全屏页面。
-- **`ScreenAdaptType.min`**: 基于屏幕**宽度和高度中的最小值**进行缩放。适用于需要同时在手机和平板上保持相似外观的应用，常用于响应式布局。
+## 2. 适配模式
 
-**示例：按高度适配**
+`DesignSizeWidgetsFlutterBinding.ensureInitialized(...)` 支持 `ScreenAdaptType`：
+
+- `ScreenAdaptType.width`
+  默认模式，按宽度适配
+- `ScreenAdaptType.height`
+  按高度适配
+- `ScreenAdaptType.min`
+  按宽高最小边适配
+
+示例：
+
 ```dart
 DesignSizeWidgetsFlutterBinding.ensureInitialized(
-  const Size(360, 690),
-  type: ScreenAdaptType.height,
+  const Size(375, 667),
+  type: ScreenAdaptType.width,
 );
 ```
 
----
+## 3. 正常写布局
 
-## 3. 进行 UI 布局
-
-一旦激活了 `screen_adapt`，您就可以像往常一样编写 Flutter UI，但有一个巨大的优势：**您可以直接使用设计稿上的尺寸 (dp) 值！**
-
-- **忘记手动计算**：不再需要 `MediaQuery.of(context).size.width * 0.5` 这样的代码。
-- **无需扩展方法**：不再需要到处写 `.w`, `.h` 或 `.r`。
-- **不影响const优化**: 不再会因为使用 `.w`修饰而无法使用const
-
-**示例：**
-
-假设您的设计稿宽度为 360dp，您想创建一个宽度为 180dp 的红色容器。
+大多数场景下，你可以直接按设计稿尺寸写 Flutter UI：
 
 ```dart
-class MyHomePage extends StatelessWidget {
-  const MyHomePage({super.key});
+class DemoPage extends StatelessWidget {
+  const DemoPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('设计稿尺寸为 360x690'),
-      ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // 这个容器的宽度将自动适配为屏幕宽度的一半
-            Container(
-              width: 180, // 直接使用设计稿的 dp 值
-              height: 100, // 直接使用设计稿的 dp 值
-              color: Colors.red,
-            ),
-            const SizedBox(height: 20), // 间距也直接使用设计稿 dp 值
-            const Text(
-              '字体大小为 16sp',
-              style: TextStyle(
-                fontSize: 16, // 字体大小也会自动缩放
-              ),
-            ),
-          ],
+        child: Container(
+          width: 180,
+          height: 100,
+          color: Colors.orange,
+          alignment: Alignment.center,
+          child: const Text(
+            '180 x 100',
+            style: TextStyle(fontSize: 16),
+          ),
         ),
       ),
     );
@@ -109,52 +75,89 @@ class MyHomePage extends StatelessWidget {
 }
 ```
 
----
+这里的 `180 / 100 / 16` 都直接使用设计稿语义，不需要再写 `.w / .h / .sp`。
 
-## 4. 局部禁用适配: `UnscaledZone`
+## 4. 运行时切换设计稿
 
-在某些情况下，您可能希望局部区域不参与全局缩放，以保持其原始的像素尺寸。例如，显示第三方 UI 组件、绘制精确的像素图形等。此时，您可以使用 `UnscaledZone`。
-
-`UnscaledZone` 会在其子树中创建一个“隔离区”，恢复到设备原始的、未经缩放的尺寸体系。
-它支持两种模式：
-
-- `UnscaledZoneMode.contextFallback`（默认）：只回退子树上下文，`UnscaledZone` 自身仍按当前适配坐标系参与布局。
-- `UnscaledZoneMode.full`：彻底反适配，同时回退子树上下文以及 `UnscaledZone` 自身的占位/绘制/命中测试。
-
-**示例：**
+如果树中存在 `DesignSizeWidget`，可以在运行时切换设计稿：
 
 ```dart
-import 'package:screen_adapt/screen_adapt.dart';
-
-// ...
-
-@override
-Widget build(BuildContext context) {
-  return Column(
-    children: [
-      // 这是参与全局适配的 Widget
-      Container(
-        width: 180, 
-        height: 100,
-        color: Colors.blue, // 在任何设备上都是半屏宽
-        child: const Center(child: Text('已适配')),
-      ),
-
-      // --- 使用 UnscaledZone 创建一个不适配的区域 ---
-      UnscaledZone(
-        child: Container(
-          width: 180, 
-          height: 100,
-          color: Colors.green, // 在任何设备上都是 180dp 原始宽度
-          child: const Center(child: Text('未适配 (原始尺寸)')),
-        ),
-      ),
-    ],
-  );
-}
+DesignSize.of(context).setDesignSize(const Size(390, 844));
+DesignSize.of(context).reset();
 ```
 
-如果您希望 `UnscaledZone` 自身也按原始尺寸占位，请使用 `full` 模式：
+适合：
+
+- 调试不同设计稿基线
+- 平板 / 桌面场景下按窗口或断点切换设计稿
+
+## 5. 局部退出全局适配
+
+### `UnscaledZone`
+
+`UnscaledZone` 用于“全局适配已经打开，但局部区域不该跟着适配”的场景。
+
+当前实现按三层能力拼装：
+
+- 恢复 `MediaQuery`
+- 恢复绘制与命中测试
+- 可选恢复布局占位
+
+#### `contextFallback`
+
+默认模式。
+
+恢复：
+
+- `context`
+- `paint`
+
+不恢复：
+
+- `layout`
+
+效果：
+
+- 子树看起来回到原始尺寸
+- 但父布局里的占位不变
+
+适合：
+
+- 局部图表、自绘区域、坐标系、标尺
+- 只想让子树恢复原尺寸，但不想打乱外层布局节奏
+
+示例：
+
+```dart
+UnscaledZone(
+  child: Container(
+    width: 180,
+    height: 100,
+    color: Colors.green,
+  ),
+)
+```
+
+#### `full`
+
+恢复：
+
+- `context`
+- `layout`
+- `paint`
+
+效果：
+
+- 子树看起来回到原始尺寸
+- 子树对父布局汇报的占位也一起回退
+
+适合：
+
+- legacy 模块
+- 相邻 widget 的排布必须跟着真实尺寸变化
+- 局部独立子系统、第三方复杂组件
+
+示例：
 
 ```dart
 UnscaledZone(
@@ -163,35 +166,70 @@ UnscaledZone(
     width: 180,
     height: 100,
     color: Colors.orange,
-    child: const Center(child: Text('彻底反适配')),
   ),
 )
 ```
 
-**注意**:
+### 该选哪一个
 
-- `contextFallback` 更适合只想回退子树上下文的场景。
-- `full` 更适合普通 Flutter 组件需要连同占位一起恢复原始尺寸的场景。
-- `UnscaledZone` 已经内置了对嵌套的保护，所以您可以安全地在组件内部使用它，而不用担心意外的嵌套导致布局错误。
+- 普通页面：不用 `UnscaledZone`
+- 只想让子树自己恢复原尺寸，父布局别动：`contextFallback`
+- 连占位和相邻排版都要一起回退：`full`
 
----
+## 6. 原生视图
 
-## 5. 其他高级用法
+### `AdaptedPlatformView`
 
-### 在运行时切换设计稿尺寸
+`PlatformView` 在全局适配下常见问题：
 
-如果您需要动态地改变适配基准，您可以通过 `DesignSize.of(context)` 来访问 `DesignSizeWidgetState` 并调用其方法。
+- 视觉尺寸失真
+- 容器边界和原生内容不对齐
+- 点击区域错位
 
-```dart
-// 切换到新的设计稿尺寸
-DesignSize.of(context).setDesignSize(const Size(750, 1334));
+这类场景优先使用 `AdaptedPlatformView`。
 
-// 重置为不适配状态
-DesignSize.of(context).reset();
-```
+## 7. 物理像素绘制
 
-这在使用响应式布局，需要根据窗口大小切换不同设计稿基准时非常有用。
+### `PhysicalPixelZone`
 
----
+用于处理：
 
-恭喜！您现在已经掌握了 `screen_adapt` 的主要用法。开始享受顺滑的屏幕适配开发体验吧！
+- 1px 线条
+- 细网格
+- 像素级绘制
+
+注意：
+
+- 它主要改变的是内部绘制语义
+- 不会自动改变外层父布局占位
+
+## 8. 示例工程怎么读
+
+示例入口：
+
+- [example/lib/main.dart](../../example/lib/main.dart)
+- [example/lib/home_page.dart](../../example/lib/home_page.dart)
+
+专题页：
+
+- [example/lib/adaptation_gallery_page.dart](../../example/lib/adaptation_gallery_page.dart)
+  看全局适配和设计稿切换
+- [example/lib/unscaled_zone_demo_page.dart](../../example/lib/unscaled_zone_demo_page.dart)
+  看 `UnscaledZone` 两种模式、嵌套、row sibling 影响、重进适配态
+- [example/lib/demo3/pointer_test_page.dart](../../example/lib/demo3/pointer_test_page.dart)
+  看点击和拖拽是否准确
+- [example/lib/platform_view_demo.dart](../../example/lib/platform_view_demo.dart)
+  看原生视图补偿
+- [example/lib/physical_pixel_demo_page.dart](../../example/lib/physical_pixel_demo_page.dart)
+  看物理像素语义
+- [example/lib/keyboard_media_query_page.dart](../../example/lib/keyboard_media_query_page.dart)
+  看键盘与 `viewInsets`
+
+## 9. 常见判断
+
+- 想按设计稿直接写 UI：初始化 binding
+- 想动态切设计稿：`DesignSize.of(context)`
+- 想局部恢复原始尺寸但不影响父布局：`UnscaledZone.contextFallback`
+- 想连占位一起恢复：`UnscaledZone.full`
+- 想处理原生视图尺寸失真：`AdaptedPlatformView`
+- 想做 1px / 像素级绘制：`PhysicalPixelZone`

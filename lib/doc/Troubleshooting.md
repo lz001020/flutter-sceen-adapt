@@ -1,87 +1,152 @@
-# 屏幕适配方案潜在问题与解决方案
+# `screen_adapt` 排查指南
 
-本方案通过在 `WidgetsFlutterBinding` 层修改 `devicePixelRatio` (DPR) 来实现全局缩放。这种方案具有极低侵入性的优点，但也因为在底层“欺骗”了引擎，会带来一些特定的边缘问题。
+本文档按“现象 -> 优先检查项”的方式组织。
 
----
+## 1. 页面整体尺寸不对
 
-## 1. 手势点击坐标偏移 (Pointer Event Misalignment)
+优先检查：
 
-### 问题描述
-Flutter 引擎发送的原始触摸数据是物理像素坐标。在将物理像素转换为逻辑坐标时（`PointerEventConverter.expand`），默认使用的是系统原始 DPR。由于我们修改了渲染层的逻辑尺寸，如果不同步修改手势系统的 DPR 转换逻辑，会导致点击位置发生偏移。
+- `main()` 里是否先调用了 `DesignSizeWidgetsFlutterBinding.ensureInitialized(...)`
+- 设计稿尺寸是否写对
+- `ScreenAdaptType` 是否符合当前页面预期
 
-### 解决方案
-在 `DesignSizeWidgetsFlutterBinding` 中 Hook `onPointerDataPacket`，确保转换时使用适配后的 `devicePixelRatio`。
-*   **实现**: 重写 `_devicePixelRatioForView` 或 `_handlePointerDataPacket`，针对主视图返回 `ScreenSizeUtils.instance.data.devicePixelRatio`。
+建议：
 
----
+- 先打开示例工程的运行时设计稿切换，对照当前目标设计稿验证一遍
 
-## 2. 原生组件嵌入 (Platform Views)
+参考：
 
-### 问题描述
-`WebView`, `AndroidView`, `UiKitView` (如地图、视频播放器、原生广告) 是由原生系统直接渲染的。原生系统并不知晓 Flutter 内部修改了 DPR。
-*   **表现**: 原生组件的大小可能显示不全（过大或过小），位置可能发生偏移，或者组件内部的点击事件完全失效。
+- [example/lib/adaptation_gallery_page.dart](../../example/lib/adaptation_gallery_page.dart)
 
-### 解决方案
-对于此类组件，需要局部“反适配”。
-*   **方法**: 使用 `UnscaledZone` 包裹原生组件。
-*   **注意**: 传递给原生组件的 `width` 和 `height` 需要手动乘以缩放比例 `scale`，以确保在物理屏幕上占据正确的位置。
+## 2. 点击位置偏移 / 拖拽轨迹不对
 
----
+优先检查：
 
-## 3. 软键盘弹出与 `viewInsets`
+- 是否正确使用了 binding 初始化，而不是只套了 `DesignSizeWidget`
+- 是否有插件或自定义逻辑覆盖了 `onPointerDataPacket`
 
-### 问题描述
-软键盘的高度由原生系统决定并以物理像素反馈。虽然方案中已经对 `viewInsets` 进行了缩放处理，但在某些极端场景下：
-*   **表现**: 键盘顶起的高度不足或过多；在嵌套滚动或复杂的 `ResizeToAvoidBottomInset` 逻辑中，UI 可能无法完美避开键盘。
+建议：
 
-### 解决方案
-*   **检查**: 确保 `ScreenSizeUtils` 中的 `design()` 扩展正确处理了 `viewInsets / scale`。
-*   **适配**: 如果在某个页面键盘处理极其异常，可使用 `UnscaledZone` 暂时恢复到原始坐标系处理输入逻辑。
+- 先用示例页验证当前机器上的点击和拖拽行为
 
----
+参考：
 
-## 4. 屏幕旋转与分屏 (Metrics Changed)
+- [example/lib/demo3/pointer_test_page.dart](../../example/lib/demo3/pointer_test_page.dart)
 
-### 问题描述
-当设备发生物理旋转（竖屏切横屏）或在平板上进入分屏模式时，物理尺寸会瞬间改变。如果适配参数没有及时同步更新，整个 UI 会拉伸变形。
+## 3. 某块区域看起来不该被适配
 
-### 解决方案
-*   **监听**: 在 `DesignSizeWidgetsFlutterBinding` 中重写 `handleMetricsChanged`。
-*   **同步**: 在该方法中重新触发 `ScreenSizeUtils.instance.setup()`，并循环调用 `renderView.configuration = createViewConfigurationFor(renderView)` 强制刷新渲染树配置。
-*   **UI 刷新**: 确保顶层的 `DesignSizeWidget` 能够响应指标变化并触发 `setState` 重新注入 `MediaQuery`。
+优先判断：
 
----
+- 你只是想让它自己恢复原尺寸？
+- 还是连占位也一起恢复？
 
-## 5. 字体缩放策略 (Text Scaling)
+选择：
 
-### 问题描述
-系统设置中的“大字体”模式会与全局缩放系数 `scale` 产生叠加效应。
-*   **表现**: 开启系统大字体后，适配后的 UI 里的文字可能会溢出组件边界（Overflow）。
+- 只恢复自己：`UnscaledZone.contextFallback`
+- 连占位一起恢复：`UnscaledZone.full`
 
-### 解决方案
-*   **策略一 (锁定)**: 在覆盖 `MediaQueryData` 时，强制设置 `textScaler: TextScaler.noScaling`，使应用忽略系统字体大小设置，完全遵循设计稿。
-*   **策略二 (兼容)**: 在 `ScreenSizeUtils` 计算 `scale` 时，将 `textScaleFactor` 纳入考量，或者在设计 UI 时留出足够的伸缩空间。
+参考：
 
----
+- [example/lib/unscaled_zone_demo_page.dart](../../example/lib/unscaled_zone_demo_page.dart)
 
-## 6. 系统弹窗与 Overlay (System Dialogs)
+## 4. `contextFallback` 看起来变小了，但相邻 widget 还是被推开
 
-### 问题描述
-部分第三方 Toast 库或直接调用原生 Dialog 的插件，可能不会继承应用内的 `MediaQuery` 状态。
-*   **表现**: 弹窗字体极其微小或巨大，背景遮罩无法全屏。
+这是模式定义，不是 bug。
 
-### 解决方案
-*   **标准**: 优先使用 Flutter 原生的 `showDialog` 或 `Overlay` 机制。
-*   **注入**: 确保所有的适配逻辑在 `MaterialApp` 之上完成注入。如果必须使用第三方 Overlay 库，检查其是否支持自定义 `MediaQuery` 或 `context`。
+原因：
 
----
+- `contextFallback` 只回退 `context + paint`
+- 它不会回退父布局里的占位
 
-## 7. 物理像素对齐 (Pixel Snapping)
+如果你希望相邻 widget 跟着真实尺寸变化，请改用：
 
-### 问题描述
-由于 `scale` 通常是浮点数（如 1.12345），适配后的逻辑像素乘以适配后的 DPR 可能不再是整数物理像素。
-*   **表现**: 极细的边线（1px）可能在某些位置变模糊，或者产生微小的“子像素”缝隙。
+- `UnscaledZoneMode.full`
 
-### 解决方案
-*   **绘制**: 绘制极细线条时，尽量使用逻辑像素并开启抗锯齿。
-*   **组件**: 某些对对齐极其敏感的 UI，可以使用 `PhysicalPixelZone` 组件（如果已实现）来确保子树在物理像素边界上对齐。
+## 5. `full` 似乎没有生效
+
+优先检查：
+
+- 父组件是不是给了严格约束
+- 你看的到底是“逻辑占位”还是“最终绘制”
+- demo 本身有没有额外 padding / overlay 干扰判断
+
+建议：
+
+- 用示例页里的 `Mode Comparison` 和 `Row Sibling Impact` 交叉验证
+
+## 6. 嵌套 `UnscaledZone` 后尺寸继续缩错
+
+优先检查：
+
+- 是否是旧实现或旧 demo 的认知残留
+- 当前子树里是否已经有祖先生效的 `paint` / `layout` 回退
+
+当前实现通过 `AdaptScope` 显式传递状态，正常情况下：
+
+- 祖先已经做过 `paint`，内层不会重复做
+- 祖先已经做过 `layout`，内层只补缺失层
+
+如果仍然缩错，建议先在示例页复现：
+
+- [example/lib/unscaled_zone_demo_page.dart](../../example/lib/unscaled_zone_demo_page.dart)
+
+## 7. 中间套了 `DesignSizeWidget` 后行为不符合预期
+
+要先分清：
+
+- `DesignSizeWidget` 负责恢复适配态 `MediaQuery`
+- 它不会清掉祖先已经生效的 render 反缩放
+
+所以外层如果已经进入 `UnscaledZone`，中间再套 `DesignSizeWidget`，内层行为必须结合 `AdaptScope` 一起理解。
+
+建议：
+
+- 直接看 `DesignSizeWidget Re-entry` 相关 demo
+
+## 8. `PlatformView` 尺寸或点击不对
+
+优先检查：
+
+- 是否直接使用了 `AndroidView / UiKitView / WebView`
+- 是否应该改成 `AdaptedPlatformView`
+
+参考：
+
+- [example/lib/platform_view_demo.dart](../../example/lib/platform_view_demo.dart)
+
+## 9. 键盘弹出后输入区被遮挡
+
+优先检查：
+
+- 当前页面是否正确消费了 `viewInsets`
+- `MediaQuery` 是否被意外放在过低层级
+- 列表 / 输入区是否能随内容一起滚动
+
+参考：
+
+- [example/lib/keyboard_media_query_page.dart](../../example/lib/keyboard_media_query_page.dart)
+
+## 10. 1px 线条发虚
+
+优先检查：
+
+- 这是普通逻辑像素绘制，还是物理像素语义场景
+
+如果是后者，优先考虑：
+
+- `PhysicalPixelZone`
+
+参考：
+
+- [example/lib/physical_pixel_demo_page.dart](../../example/lib/physical_pixel_demo_page.dart)
+
+## 11. 还不知道该看哪个 demo
+
+按问题类型选：
+
+- 全局适配不对：`Adaptation Gallery`
+- 局部反适配不对：`UnscaledZone`
+- 点击 / 拖拽不对：`Pointer Events`
+- 原生视图不对：`PlatformView`
+- 像素线条不对：`PhysicalPixelZone`
+- 键盘 / inset 不对：`Keyboard & Insets`

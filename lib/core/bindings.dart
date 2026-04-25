@@ -1,6 +1,8 @@
 /// core/bindings.dart
 ///
 /// Created by longzhi on 2024/7/29
+library screen_adapt_bindings;
+
 import 'dart:async';
 import 'dart:collection';
 import 'dart:ui' as ui;

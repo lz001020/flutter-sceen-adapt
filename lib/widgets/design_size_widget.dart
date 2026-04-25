@@ -1,11 +1,12 @@
-/// widgets/design_size_widget.dart
-///
-/// Created by longzhi on 2024/7/29
+// widgets/design_size_widget.dart
+//
+// Created by longzhi on 2024/7/29
 import 'package:flutter/material.dart'; // 用于 Widget, BuildContext, State, StatefulWidget, InheritedWidget
 import 'package:flutter/widgets.dart'; // 用于 MediaQuery, Size
 
 import 'package:screen_adapt/core/screen_size_utils.dart';
 import 'package:screen_adapt/base/extension.dart'; // 用于 StateAble
+import 'package:screen_adapt/widgets/adapt_scope.dart';
 
 /// 一个向其子级提供设计尺寸上下文的小部件。
 ///
@@ -19,7 +20,20 @@ class DesignSizeWidget extends StatefulWidget {
   State<StatefulWidget> createState() => DesignSizeWidgetState();
 }
 
-class DesignSizeWidgetState extends State<DesignSizeWidget> with StateAble {
+class DesignSizeWidgetState extends State<DesignSizeWidget>
+    with StateAble, WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
   /// 设置屏幕适配的设计尺寸。
   /// 这将触发屏幕指标的重新计算。
   void setDesignSize(Size size) {
@@ -37,6 +51,11 @@ class DesignSizeWidgetState extends State<DesignSizeWidget> with StateAble {
   /// 强制重新构建依赖于屏幕指标的小部件。
   void _handleMetricsChanged() {
     WidgetsBinding.instance.handleMetricsChanged();
+  }
+
+  @override
+  void didChangeMetrics() {
+    ScreenSizeUtils.instance.setup();
     setState(() {});
   }
 
@@ -44,10 +63,19 @@ class DesignSizeWidgetState extends State<DesignSizeWidget> with StateAble {
   Widget build(BuildContext context) {
     // 检查是否已经存在 DesignSize 祖先
     final outerDesignSizeState = DesignSize.maybeOf(context);
+    final inheritedAdaptScope = AdaptScope.maybeOf(context);
 
     // 基于最新原始数据计算当前适配数据，保证 setDesignSize/reset 后立即生效。
     final origin = ScreenSizeUtils.instance.originData;
     final mediaQueryData = (origin ?? MediaQuery.of(context)).design();
+    final adaptScopeState = AdaptScopeState(
+      scale: ScreenSizeUtils.instance.scale,
+      originMediaQuery: origin ?? mediaQueryData,
+      adaptedMediaQuery: mediaQueryData,
+      // DesignSizeWidget 只能重建局部上下文，不会抵消祖先已有的 render 反缩放。
+      paintUnscaled: inheritedAdaptScope?.paintUnscaled ?? false,
+      layoutUnscaled: inheritedAdaptScope?.layoutUnscaled ?? false,
+    );
 
     // 如果我们是顶层的 DesignSizeWidget，则提供 InheritedWidget。
     // 如果我们是嵌套的，则不需要提供另一个。任何后代小部件需要状态时，
@@ -56,9 +84,12 @@ class DesignSizeWidgetState extends State<DesignSizeWidget> with StateAble {
       // 我们是顶层提供者。
       return MediaQuery(
         data: mediaQueryData,
-        child: DesignSize(
-          data: this,
-          child: widget.child,
+        child: AdaptScope(
+          state: adaptScopeState,
+          child: DesignSize(
+            data: this,
+            child: widget.child,
+          ),
         ),
       );
     } else {
@@ -66,7 +97,10 @@ class DesignSizeWidgetState extends State<DesignSizeWidget> with StateAble {
       // 这可以防止状态冲突，并确保所有 of(context) 调用都找到顶层状态。
       return MediaQuery(
         data: mediaQueryData,
-        child: widget.child,
+        child: AdaptScope(
+          state: adaptScopeState,
+          child: widget.child,
+        ),
       );
     }
   }

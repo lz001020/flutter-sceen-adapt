@@ -1,10 +1,11 @@
-/// core/screen_size_utils.dart
-///
-/// Created by longzhi on 2024/7/29
+// core/screen_size_utils.dart
+//
+// Created by longzhi on 2024/7/29
 import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart'; // 引入MediaQueryData, Size等
 
 /// 定义屏幕适配的基准。
@@ -22,7 +23,7 @@ enum ScreenAdaptType {
 /// 用于管理屏幕适配参数的核心工具类。
 class ScreenSizeUtils {
   /// 设计稿尺寸
-  late Size designSize;
+  Size designSize = Size.zero;
 
   /// 屏幕适配基准类型
   ScreenAdaptType adaptType = ScreenAdaptType.width;
@@ -31,7 +32,7 @@ class ScreenSizeUtils {
   MediaQueryData? originData;
 
   /// 适配后的MediaQueryData
-  late MediaQueryData data;
+  MediaQueryData data = const MediaQueryData();
 
   /// 默认缩放比例
   static const defaultScale = 1.0;
@@ -58,6 +59,28 @@ class ScreenSizeUtils {
 
   ScreenSizeUtils._internal();
 
+  @visibleForTesting
+  FlutterView? Function()? debugCurrentViewProvider;
+
+  FlutterView? _currentViewOrNull() {
+    final debugProvider = debugCurrentViewProvider;
+    if (debugProvider != null) return debugProvider();
+
+    final views = PlatformDispatcher.instance.views;
+    if (views.isEmpty) return null;
+    return views.first;
+  }
+
+  void _resetToFallbackMetrics() {
+    originData = null;
+    data = const MediaQueryData();
+    scale = defaultScale;
+  }
+
+  bool _detectDesktopPlatform() {
+    return Platform.isLinux || Platform.isMacOS || Platform.isWindows;
+  }
+
   /// 设置设计稿尺寸以及可选的适配类型和字体策略。
   void setDesignSize(
     Size size, {
@@ -69,16 +92,22 @@ class ScreenSizeUtils {
     adaptType = type;
     this.scaleText = scaleText;
     this.supportSystemTextScale = supportSystemTextScale;
-    
-    if (Platform.isLinux || Platform.isMacOS || Platform.isWindows) {
-      _isDesktop = true;
-    }
+    _isDesktop = _detectDesktopPlatform();
     setup();
   }
 
   /// 将适配重置为原始的屏幕指标。
   reset() {
-    final view = PlatformDispatcher.instance.views.first;
+    _isDesktop = _detectDesktopPlatform();
+    final view = _currentViewOrNull();
+    if (view == null) {
+      designSize = Size.zero;
+      _resetToFallbackMetrics();
+      scaleText = true;
+      supportSystemTextScale = true;
+      return;
+    }
+
     originData = MediaQueryData.fromView(view);
     designSize = originData!.size; // 将设计稿尺寸重置为当前屏幕尺寸
     if (designSize.width > designSize.height && !_isDesktop) {
@@ -86,14 +115,31 @@ class ScreenSizeUtils {
       designSize = designSize.flipped;
     }
     scale = defaultScale;
+    data = originData!;
     scaleText = true;
     supportSystemTextScale = true;
   }
 
   /// 根据所选的 [adaptType] 设置屏幕适配参数。
   setup() {
-    final view = PlatformDispatcher.instance.views.first;
+    _isDesktop = _detectDesktopPlatform();
+    final view = _currentViewOrNull();
+    if (view == null) {
+      _resetToFallbackMetrics();
+      return;
+    }
+
     originData = MediaQueryData.fromView(view);
+
+    if (designSize.isEmpty) {
+      designSize = originData!.size;
+      if (designSize.width > designSize.height && !_isDesktop) {
+        designSize = designSize.flipped;
+      }
+      scale = defaultScale;
+      data = originData!;
+      return;
+    }
 
     if (_isDesktop && scale != defaultScale) {
       data = originData!.design(); // 对于桌面端，如果 scale 是自定义的，则应用它

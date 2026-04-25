@@ -1,13 +1,11 @@
 import 'dart:io';
 
 import 'package:example/demo3/pointer_test_page.dart';
-import 'package:example/page1.dart';
-import 'package:example/page2.dart';
+import 'package:example/home_page.dart';
 import 'package:example/platform_view_demo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:screen_adapt/screen_adapt.dart';
-
 
 void main() {
   DesignSizeWidgetsFlutterBinding.ensureInitialized(
@@ -31,13 +29,16 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         appBarTheme: const AppBarTheme(centerTitle: false),
+        scaffoldBackgroundColor: const Color(0xFFF7F3EA),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF123458),
+          surface: const Color(0xFFF7F3EA),
+        ),
       ),
-      initialRoute: "/page1",
+      home: const HomePage(),
       routes: {
-        "/page1": (context) => const Page1(),
-        "/page2": (context) => const Page2(),
-        "/demo3": (context) => const PointerTestPage(),
-        "/platform_view_demo": (context) => const PlatformViewDemoPage(),
+        '/pointer_demo': (context) => const PointerTestPage(),
+        '/platform_view_demo': (context) => const PlatformViewDemoPage(),
       },
     );
   }

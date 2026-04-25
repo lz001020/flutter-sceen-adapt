@@ -1,219 +1,132 @@
-# `screen_adapt` 已知问题与优化建议
+# `screen_adapt` 已知问题与设计限制
 
-本文档记录方案在研发过程中识别出的潜在问题与优化方向，按优先级分级列出。
+本文档只记录两类内容：
 
----
+- 当前实现仍需关注的风险
+- 明确属于设计约束、不是 bug 的行为
 
-## 高优先级（潜在崩溃 / 功能失效）
+## 仍待处理
 
-### 1. Flutter Web 平台崩溃
+### 1. Flutter Web 兼容性
 
-**位置**: `core/screen_size_utils.dart:73`
+当前 `ScreenSizeUtils` 仍依赖 `dart:io` 的 `Platform` 判断桌面平台。
 
-**问题**: `dart:io` 的 `Platform` 类在 Flutter Web 上不可用，调用时直接抛出异常。
+影响：
 
-```dart
-// 当前代码 —— Web 上崩溃
-if (Platform.isLinux || Platform.isMacOS || Platform.isWindows) {
-```
+- Flutter Web 不可直接复用这套逻辑
 
-**建议**: 改用 `kIsWeb` + `defaultTargetPlatform`：
+建议：
 
-```dart
-import 'package:flutter/foundation.dart';
+- 改成 `kIsWeb + defaultTargetPlatform`
 
-final bool _isDesktop = !kIsWeb &&
-    (defaultTargetPlatform == TargetPlatform.linux ||
-     defaultTargetPlatform == TargetPlatform.macOS ||
-     defaultTargetPlatform == TargetPlatform.windows);
-```
+### 2. `onPointerDataPacket` 接管方式存在冲突风险
 
----
+当前方案会直接接管 `PlatformDispatcher.instance.onPointerDataPacket`。
 
-### 2. `originData` 的 `LateInitializationError`
+影响：
 
-**位置**: `widgets/unscaled_zone.dart:70`，`core/screen_size_utils.dart:32`
+- 如果其他插件也覆盖这个回调，后设置的一方会覆盖前者
 
-**问题**: `originData` 声明为 `late MediaQueryData`（非可空），但 `UnscaledZone` 里对它做了 null 检查：
+建议：
 
-```dart
-if (originalMediaQueryData == null || ...) // 永远不成立的死代码
-```
+- 缓存原始回调
+- 改成链式调用
 
-如果 `UnscaledZone` 在 `setup()` 被调用之前渲染（如热重载极早期），访问 `originData` 会抛出 `LateInitializationError`，而不是走到安全分支。
+### 3. 高刷设备上的指针重采样仍需真机验证
 
-**建议**: 将 `originData` 改为可空类型 `MediaQueryData?`，或在 `_internal()` 构造中通过 `PlatformDispatcher` 提前初始化。
+当前方案在 binding 层处理指针包，有可能绕开 Flutter 某些内部重采样路径。
 
----
+影响：
 
-### 3. `views.first` 假设 views 非空
+- 90Hz / 120Hz 设备上的拖拽顺滑度需要继续验证
 
-**位置**: `core/screen_size_utils.dart:95`
+### 4. 桌面端 resize 的产品语义还不够明确
 
-**问题**: 在单元测试 / 无头环境下，`PlatformDispatcher.instance.views` 可能为空，`.first` 直接抛出 `StateError`。
+当前桌面端在窗口变化后会更新指标，但 scale 是否应该跟着窗口实时重算，仍需要明确产品预期。
 
-```dart
-final view = PlatformDispatcher.instance.views.first; // 可能崩溃
-```
+影响：
 
-**建议**: 加防御性检查：
+- 不同人对“桌面端是否固定 scale”可能有不同理解
 
-```dart
-final views = PlatformDispatcher.instance.views;
-if (views.isEmpty) return;
-final view = views.first;
-```
+### 5. `handleMetricsChanged()` 存在重复计算
 
----
+当前某些路径里会多次调用 `ScreenSizeUtils.setup()`。
 
-## 中优先级（行为异常 / 需确认的设计决策）
+影响：
 
-### 4. `onPointerDataPacket` 被完全替换，存在插件冲突风险
+- 通常不致错，但存在不必要的重复计算
 
-**位置**: `core/bindings.dart:91`
+### 6. 多窗口 / 多 view 场景支持有限
 
-**问题**: 使用直接赋值替换回调，而非链式调用。若第三方插件（输入法、无障碍服务等）也设置了同一回调，后设置的一方会覆盖前者，导致其中一方的手势处理完全失效。
+当前 `ScreenSizeUtils` 仍是全局单例，并默认围绕主 view 工作。
 
-```dart
-PlatformDispatcher.instance.onPointerDataPacket = _handlePointerDataPacket;
-```
+影响：
 
-**建议**: 保存并链式调用原始回调：
+- 多窗口或未来多 view 场景不够自然
 
-```dart
-final _originalOnPointerDataPacket = PlatformDispatcher.instance.onPointerDataPacket;
+### 7. 横屏设计稿仍建议真机验证
 
-void _handlePointerDataPacket(ui.PointerDataPacket packet) {
-  // ... 自定义逻辑 ...
-  _originalOnPointerDataPacket?.call(packet);
-}
-```
+当前实现会根据横竖屏对宽高参与计算的方式做调整，但“设备横屏”和“设计稿本身横屏”的组合场景仍建议单独验证。
 
----
+### 8. 手动嵌套 `DesignSizeWidget` 仍可能引入双重缩放
 
-### 5. 高刷屏（90Hz/120Hz）的指针重采样被绕过
+当前实现已经尽量降低嵌套冲突，但如果用户在已经启用 binding 的应用里再次手动套用 `DesignSizeWidget`，仍有可能在已适配的 `MediaQueryData` 基础上再次执行 `.design()`。
 
-**位置**: `core/bindings.dart:88-92`
+建议：
 
-**问题**: Flutter 的 `GestureBinding` 提供 `resamplingEnabled` 机制，在高刷新率设备上对触摸事件做插值以平滑滑动。当前方案在 `initInstances` 中完全替换了 `onPointerDataPacket`，绕过了这条路径：
+- 增加 assert 或 debug warning
 
-```dart
-// Flutter GestureBinding 内部（被绕过的路径）
-if (resamplingEnabled) {
-  _resampler.addOrDispatch(event);
-  _resampler.sample(samplingOffset, _samplingClock);
-  return;
-}
-```
+## 设计约束
 
-**影响**: 在 120Hz Android 手机上，滚动/拖动的流畅度可能低于原生水平。
+### 1. `contextFallback` 会保留父布局槽位
 
-**建议**: 在真机（120Hz 设备）上实测滚动帧率，与未使用本方案的对照组对比，确认是否有肉眼可见的差异后再决定是否修复。
+这不是 bug，而是模式定义。
 
----
+表现：
 
-### 6. `_getAdaptedDevicePixelRatio` 在手势热路径上存在冗余查找
+- 子树看起来变小
+- 相邻 widget 仍然可能被原逻辑占位推开
 
-**位置**: `core/bindings.dart:120-132`
+如果你不想保留这块占位，应改用 `UnscaledZoneMode.full`。
 
-**问题**: 手机只有一个 view，但每次指针事件都执行两次 dispatcher 查找：
+### 2. `full` 仍受父约束体系影响
 
-```dart
-final view = platformDispatcher.view(id: viewId);       // map 查找
-if (viewId == platformDispatcher.implicitView?.viewId)  // 再次访问
-```
+`full` 会回退布局占位，但不会绕过 Flutter 正常的父约束机制。
 
-手势密集时（快速滑动、绘图），此开销会在每个事件上重复。
+表现：
 
-**建议**: 在绑定初始化时缓存 `implicitViewId`：
+- 如果父组件本身给了严格约束，`full` 也必须在这套约束内工作
 
-```dart
-late final int? _implicitViewId = platformDispatcher.implicitView?.viewId;
+### 3. `PhysicalPixelZone` 主要改变内部绘制语义
 
-double? _getAdaptedDevicePixelRatio(int viewId) {
-  if (viewId == _implicitViewId) {
-    return ScreenSizeUtils.instance.data.devicePixelRatio;
-  }
-  return platformDispatcher.view(id: viewId)?.devicePixelRatio;
-}
-```
+它不负责改变外层布局流。
 
----
+表现：
 
-### 7. 桌面端 resize 后 scale 冻结
+- 内部能拿到物理像素语义
+- 父布局看到的仍是原有逻辑槽位
 
-**位置**: `core/screen_size_utils.dart:98-101`
+如果要让外层占位也一起变化，需要额外约束组件配合。
 
-**问题**: 桌面窗口 resize 后，`originData` 会更新为新窗口尺寸，但 `scale` 永远停留在启动时的计算值，不会重新适配：
+## 已修复但值得保留背景
 
-```dart
-if (_isDesktop && scale != defaultScale) {
-  data = originData.design(); // 使用旧 scale，不重新计算
-  return;
-}
-```
+### 1. `originData` 空安全问题
 
-**需确认**: 这是有意为之（桌面端固定 scale，窗口自由拉伸）还是 bug？若是有意设计，建议在代码注释和文档中明确说明。
+此前 `originData` 的声明和使用语义不一致，当前已改为可空并安全降级。
 
----
+### 2. `UnscaledZone` 默认模式语义不完整
 
-### 8. `double?` 回调签名与 Flutter 版本的兼容性
+此前默认模式更像“只回退上下文”，现在已经明确拆成：
 
-**位置**: `core/bindings.dart:120`
+- `contextFallback = context + paint`
+- `full = context + layout + paint`
 
-**问题**: 传给 `PointerEventConverter.expand` 的回调返回 `double?`，但不同 Flutter 版本对该参数签名的可空性要求不一致，升级 Flutter 时可能悄悄编译失败。
+### 3. `PlatformDispatcher.instance.views.first` 无防御访问
 
-```dart
-double? _getAdaptedDevicePixelRatio(int viewId) // 返回 double?
-```
+当前已补充空视图防御，避免 fallback 场景直接抛异常。
 
-**建议**: 在 `pubspec.yaml` 中锁定 `flutter` SDK 下限版本，并在 CI 中覆盖 stable/beta 频道的回归测试。
+## 建议的阅读顺序
 
----
-
-### 9. `handleMetricsChanged` 中 `setup()` 被调用两次
-
-**位置**: `core/bindings.dart:151-158`
-
-**问题**: 每次屏幕旋转/分屏变化时，`setup()` 被重复计算：
-
-```dart
-ScreenSizeUtils.instance.setup();            // 第一次
-renderView.configuration = createViewConfigurationFor(renderView); // 内部再调用一次
-```
-
-**建议**: 在 `createViewConfigurationFor` 中移除对 `setup()` 的调用，改在 `handleMetricsChanged` 里统一调用一次后再刷新配置。
-
----
-
-## 低优先级（边界场景）
-
-### 10. 多视图 / 多窗口场景不支持
-
-`ScreenSizeUtils` 是全局单例，绑定的是 `views.first`。在 iPad 多窗口或桌面多窗口场景下，每个窗口有独立的 `FlutterView`，当前架构无法为不同窗口维护独立的适配状态。
-
----
-
-### 11. 横屏设计稿的适配逻辑错误
-
-**位置**: `core/screen_size_utils.dart:107-110`
-
-代码在检测到设备横屏时会翻转 `currentWidth/currentHeight`，但没有检查 `designSize` 本身是横屏还是竖屏。若用户传入横屏设计稿（`width > height`），翻转逻辑会反向计算，产生错误的 scale。
-
----
-
-### 12. 用户手动嵌套 `DesignSizeWidget` 可能导致双重缩放
-
-若用户同时使用 binding（已在 `wrapWithDefaultView` 中插入 `DesignSizeWidget`）并手动在 widget 树顶层再套一个，内层 `build()` 会在已适配的 `MediaQueryData` 上再次调用 `.design()`，导致双重缩放。
-
-**建议**: 在 `DesignSizeWidget.build()` 中加 assert 或日志提示：若检测到祖先已有 `DesignSize`，且当前非 `UnscaledZone` 内部，则 warning。
-
----
-
-### 13. `PhysicalPixelZone` 只影响绘制，不影响布局
-
-**位置**: `component/physical_pixel_zone.dart:44`
-
-`Transform.scale` 是纯绘制层变换，不影响 layout 阶段。内部 widget 实际占用的布局空间不变，视觉上被压缩后会留有空白，相邻 widget 不会重新排布。
-
-**建议**: 在文档和组件注释中明确说明此行为，提示用户若需要布局也跟随收缩，应同时使用 `SizedBox` 限制尺寸。
+- 如何接入： [Usage.md](../../lib/doc/Usage.md)
+- 为什么这样设计： [Concept.md](../../lib/doc/Concept.md)
+- 遇到问题怎么排查： [Troubleshooting.md](../../lib/doc/Troubleshooting.md)

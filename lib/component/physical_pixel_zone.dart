@@ -1,6 +1,8 @@
 /// component/physical_pixel_zone.dart
 ///
 /// Created by longzhi on 2024/7/29
+library screen_adapt_physical_pixel_zone;
+
 import 'package:flutter/cupertino.dart';
 
 // ==========================================================

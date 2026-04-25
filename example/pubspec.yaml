@@ -37,6 +37,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   screen_adapt:
     path: ../
+  flutter_screenutil: ^5.9.3
 dev_dependencies:
   flutter_test:
     sdk: flutter

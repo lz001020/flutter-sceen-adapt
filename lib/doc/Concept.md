@@ -1,64 +1,296 @@
-# `screen_adapt` 方案核心设计与技术原理解析
+# `screen_adapt` 设计与原理
 
-`screen_adapt` 是一个为 Flutter 设计的、侵入性低且高性能的屏幕适配方案。其核心思想是**在 Flutter 渲染引擎层面进行全局的、一次性的缩放**，使得开发者在上层 UI 开发中，可以直接使用设计稿的尺寸单位（dp）进行布局，而无需在每个组件上进行手动计算或调用扩展方法。
+本文档解释的是：
 
-本方案旨在平衡易用性、性能和灵活性，其设计涉及了对 Flutter 框架底层机制的深度定制。
+- 这个方案为什么不依赖 `.w / .h`
+- 它在 Flutter 渲染链路里改了什么
+- `UnscaledZone` 为什么要拆成 `context / paint / layout`
 
----
+## 1. 方案定位
 
-## 1. 核心技术：定制 `WidgetsFlutterBinding`
+`screen_adapt` 的核心不是“业务层尺寸换算”，而是“全局逻辑坐标系重映射”。
 
-Flutter 的 `WidgetsFlutterBinding` 是连接 Flutter 引擎与 Dart 代码的桥梁。通过自定义该绑定，我们可以在 Flutter 应用的生命周期早期介入，修改其默认行为。
+常见适配方案会在业务代码里大量写：
 
-### `DesignSizeWidgetsFlutterBinding`
+- `.w`
+- `.h`
+- `.sp`
+- `MediaQuery.of(context).size.width * ratio`
 
-本方案的核心是 `DesignSizeWidgetsFlutterBinding`。它继承自 `WidgetsFlutterBinding`，并重写了几个关键方法，以实现全局屏幕适配。
+这种方案的问题是：
 
-#### 1.1. 视图配置修改: `createViewConfigurationFor()`
+- 侵入业务层
+- 代码噪音大
+- `const` 优化经常失效
+- 局部特殊区域要反向推导回原始尺寸
 
-- **原理**: 这是 Flutter 渲染流水线中的一个关键环节，负责确定渲染视图的逻辑尺寸和设备像素比 (`devicePixelRatio`)。Flutter 引擎根据这里的配置来决定如何将物理像素映射到逻辑像素 (dp)。
-- **实现**: 我们重写此方法，不再使用设备原始的 `devicePixelRatio`。而是：
-    1.  获取设备的物理尺寸 (`physicalConstraints`)。
-    2.  根据用户设定的适配模式 (`ScreenAdaptType`) 和设计稿尺寸 (`designSize`)，计算出一个全局缩放比例 `scale`。
-    3.  生成一个**新的 `devicePixelRatio`** (`originDevicePixelRatio * scale`)。
-    4.  计算出**新的逻辑约束 `logicalConstraints`** (`physicalConstraints / newDevicePixelRatio`)。
-    5.  将这个全新的 `ViewConfiguration` 返回给引擎。
-- **效果**: 这一步操作直接在引擎层面“欺骗”了 Flutter，让它认为当前设备的逻辑尺寸就是我们期望的适配尺寸（通常等于设计稿尺寸）。之后的所有布局和绘制都将基于这个新的逻辑坐标系，从而实现了全局的、无感的适配。
+`screen_adapt` 选择把问题上移到 binding 层处理：
 
-#### 1.2. 手势事件修正
+- 先改逻辑尺寸和 `devicePixelRatio`
+- 再让后续布局、绘制、命中测试都工作在新的逻辑坐标系里
 
-- **原理**: 当 `devicePixelRatio` 被修改后，来自引擎的指针事件（如点击、拖动）的坐标仍然是基于物理像素的。如果不进行转换，这些事件在新的逻辑坐标系下会发生定位错误。
-- **实现**: 我们通过 Hook `PlatformDispatcher.instance.onPointerDataPacket`，在 `PointerEventConverter` 扩展指针数据时，强制使用我们适配后的 `devicePixelRatio`。
-- **效果**: 确保在全局缩放的环境下，所有手势交互依然精准无误。
+结果是：
 
-## 2. 适配逻辑管理: `ScreenSizeUtils`
+- 大多数业务组件直接写设计稿尺寸即可
+- 只有少数特殊区域才需要额外补偿
 
-这是一个单例类，作为整个方案的中央数据和逻辑管理器。
+## 2. 全局适配链路
 
-- **职责**:
-    -   存储设计稿尺寸 (`designSize`) 和适配模式 (`adaptType`)。
-    -   存储设备的原始 `MediaQueryData` (`originData`) 和适配后的 `MediaQueryData` (`data`)。
-    -   **计算核心缩放比例 `scale`**: 这是适配逻辑的核心。`setup()` 方法会根据 `adaptType`（宽度、高度或最小值）以及设备的当前朝向，计算出 `scale` 值。
-- **`MediaQueryDataExtension.design()`**: 提供一个便利的扩展方法，可将任意 `MediaQueryData` 实例根据 `scale` 值转换为适配后的版本。
+### 2.1 `DesignSizeWidgetsFlutterBinding`
 
-## 3. 局部反适配: `UnscaledZone`
+入口在：
 
-全局适配虽然强大，但在某些场景下我们需要局部禁用它（例如：显示一个第三方库的 UI、绘制像素级精确的图形）。`UnscaledZone` 就是为此而生。
+- [lib/core/bindings.dart](../../lib/core/bindings.dart)
 
-- **职责**: 在其子树中创建一个“隔离区”，恢复到设备原始的、未经缩放的尺寸体系。
-- **实现原理**:
-    1.  **注入原始 `MediaQuery`**: `UnscaledZone` 首先通过 `MediaQuery` Widget，将其子树的 `MediaQueryData` 强制恢复为 `ScreenSizeUtils.instance.originData`。这解决了尺寸、边距等信息的问题。
-    2.  **支持两种反适配模式**:
-        - `contextFallback`: 使用 `LayoutBuilder + ConstrainedBox` 将父级传递下来的约束按 `scale` 放大后交给子树，只回退子树上下文，不改变 `UnscaledZone` 自身的占位语义。
-        - `full`: 使用自定义 `RenderObject` 在布局、绘制和命中测试三个阶段同步做 `1 / scale` 反向缩放，让 `UnscaledZone` 自身的占位与子树尺寸语义一起恢复到原始坐标系。
-    3.  **嵌套问题处理**: 通过内置一个 `_UnscaledZoneMarker` (`InheritedWidget`)，`UnscaledZone` 可以检测到其祖先节点是否已存在另一个 `UnscaledZone`。如果存在，当前 `UnscaledZone` 将自动跳过所有逻辑，避免双重反向缩放导致的布局错误。
+它的职责是尽早接管 Flutter 的 view 配置流程。
 
-## 4. 易用性与灵活性
+核心点：
 
-- **一行代码激活**: 通过在 `main()` 函数中调用 `DesignSizeWidgetsFlutterBinding.ensureInitialized(...)`，用户可以轻松激活并配置整个方案。
-- **多种适配模式**: `ScreenAdaptType` 枚举提供了按宽度、高度或最小边的适配能力，满足不同场景的需求。
-- **清晰的结构**: 项目被拆分为 `core` (核心逻辑) 和 `widgets` (UI组件)，职责分明，易于维护和扩展。
+- 在 `runApp()` 前初始化
+- 改写 `createViewConfigurationFor()`
+- 同步修正指针事件转换
 
----
+### 2.2 `createViewConfigurationFor()`
 
-**总结**: `screen_adapt` 方案通过在 Flutter 框架的底层进行精巧的定制，实现了高性能的全局屏幕适配，同时通过 `UnscaledZone` 等设计提供了必要的灵活性，最终为开发者带来“所见即所得”的顺滑开发体验。
+这是全局适配真正生效的关键位置。
+
+它决定：
+
+- Flutter 看到的逻辑尺寸
+- Flutter 使用的 `devicePixelRatio`
+
+当前方案的做法是：
+
+1. 读取设备物理尺寸
+2. 根据设计稿尺寸和 `ScreenAdaptType` 计算 `scale`
+3. 生成新的 `devicePixelRatio`
+4. 反推出新的逻辑尺寸
+5. 把新的 `ViewConfiguration` 交给 Flutter
+
+这样一来，Flutter 后续的 layout / paint 都直接基于“适配后的逻辑世界”运行。
+
+## 3. `ScreenSizeUtils`
+
+入口在：
+
+- [lib/core/screen_size_utils.dart](../../lib/core/screen_size_utils.dart)
+
+它是整个方案的中心状态管理器，负责：
+
+- 保存设计稿尺寸
+- 保存适配模式
+- 保存原始 `MediaQueryData`
+- 保存适配后的 `MediaQueryData`
+- 计算全局 `scale`
+
+这里的两个数据要区分：
+
+- `originData`
+  设备原始指标
+- `data`
+  适配后的指标
+
+后面 `UnscaledZone`、`DesignSizeWidget`、指针补偿都会依赖这两个状态。
+
+## 4. 指针事件为什么要补偿
+
+全局适配之后，Flutter 的渲染坐标系已经变了，但引擎给到的原始触摸数据仍然来自物理像素世界。
+
+如果不补偿，会出现：
+
+- 点击偏移
+- 拖拽轨迹和视觉位置不一致
+- 命中测试错误
+
+所以 binding 层还要同步接管指针数据转换，让事件坐标也使用适配后的 `devicePixelRatio`。
+
+这部分能力可以在示例页里直接验证：
+
+- [example/lib/demo3/pointer_test_page.dart](../../example/lib/demo3/pointer_test_page.dart)
+
+## 5. 为什么 `UnscaledZone` 不能只靠一个 `Transform.scale`
+
+这是当前实现里最容易被误解的点。
+
+如果只做一个 `Transform.scale`，你只能改：
+
+- 视觉大小
+
+但你改不了：
+
+- 子树内部拿到的 `MediaQuery`
+- 命中测试坐标
+- 父布局看到的占位
+- intrinsic size / baseline / dry layout
+
+所以局部反适配至少要拆成三件事：
+
+- `context`
+  恢复原始 `MediaQuery`
+- `paint`
+  恢复绘制和命中测试坐标
+- `layout`
+  恢复对子组件和父组件都一致的占位语义
+
+## 6. `UnscaledZone` 当前架构
+
+入口在：
+
+- [lib/widgets/unscaled_zone.dart](../../lib/widgets/unscaled_zone.dart)
+
+当前实现不是一个“大而全”的 render 容器，而是分层拼装。
+
+### 6.1 `context`
+
+通过 `MediaQuery` 恢复原始上下文。
+
+解决的问题：
+
+- 子树里看到的 `size`
+- `padding / viewPadding / viewInsets`
+- `devicePixelRatio`
+- 以及其他 `MediaQueryData` 字段
+
+### 6.2 `paint`
+
+通过 `_PaintUnscale` 恢复绘制和命中测试坐标。
+
+解决的问题：
+
+- 子树视觉尺寸回到原始语义
+- hit test 位置和视觉位置一致
+
+### 6.3 `layout`
+
+通过 `_LayoutUnscale` 恢复布局占位语义。
+
+解决的问题：
+
+- 父布局拿到的 size 回到原始语义
+- intrinsic size 正确
+- dry layout 正确
+- baseline 正确
+
+## 7. 两种模式的差异
+
+### `contextFallback`
+
+拼装：
+
+- `context`
+- `paint`
+
+不拼：
+
+- `layout`
+
+结果：
+
+- 子树看起来变回原始尺寸
+- 但父布局仍按适配态大小给它占位
+
+适合：
+
+- 只想让局部区域恢复原尺寸
+- 但不想打乱父布局节奏
+
+### `full`
+
+拼装：
+
+- `context`
+- `paint`
+- `layout`
+
+结果：
+
+- 子树看起来回到原始尺寸
+- 父布局中的占位也一起回退
+
+适合：
+
+- 相邻 widget 也要跟着真实尺寸变化
+- 这块区域要彻底退出适配体系
+
+## 8. 为什么要有 `AdaptScope`
+
+如果没有显式状态传递，嵌套的 `UnscaledZone` 很容易重复做反缩放：
+
+- 祖先已经做过一次 `paint`
+- 内层再做一次，就会视觉缩错
+- 祖先已经做过一次 `layout`
+- 内层再做一次，就会占位继续缩错
+
+当前方案通过：
+
+- [lib/widgets/adapt_scope.dart](../../lib/widgets/adapt_scope.dart)
+
+显式往下传递当前子树状态：
+
+- 是否已经 `paintUnscaled`
+- 是否已经 `layoutUnscaled`
+
+这样内层只会补缺失层，不会重复反缩放。
+
+## 9. `DesignSizeWidget` 的作用
+
+入口在：
+
+- [lib/widgets/design_size_widget.dart](../../lib/widgets/design_size_widget.dart)
+
+它做的不是“重新初始化一套全局适配”，而是：
+
+- 局部重建适配态 `MediaQuery`
+- 让子树重新进入适配语义
+
+但它不会清掉祖先已经生效的 render 反缩放。
+
+这就是为什么：
+
+- 外层 `UnscaledZone`
+- 中间 `DesignSizeWidget`
+- 内层再次 `UnscaledZone`
+
+仍然需要依赖 `AdaptScope` 来判断哪些层已经做过，哪些层需要补。
+
+## 10. 其他能力
+
+### `AdaptedPlatformView`
+
+原生视图不运行在 Flutter 的这套逻辑坐标映射里，所以需要额外补偿。
+
+入口在：
+
+- [lib/widgets/adapted_platform_view.dart](../../lib/widgets/adapted_platform_view.dart)
+
+### `PhysicalPixelZone`
+
+它解决的是物理像素语义问题，不是全局适配问题。
+
+入口在：
+
+- [lib/component/physical_pixel_zone.dart](../../lib/component/physical_pixel_zone.dart)
+
+适合：
+
+- 1px 线条
+- 细网格
+- 像素级绘制
+
+## 11. 从实现到 demo 的映射
+
+- 全局适配： [example/lib/adaptation_gallery_page.dart](../../example/lib/adaptation_gallery_page.dart)
+- `UnscaledZone` 两种模式、嵌套、row sibling 影响、重进适配态：
+  [example/lib/unscaled_zone_demo_page.dart](../../example/lib/unscaled_zone_demo_page.dart)
+- 指针坐标修正：
+  [example/lib/demo3/pointer_test_page.dart](../../example/lib/demo3/pointer_test_page.dart)
+- 原生视图补偿：
+  [example/lib/platform_view_demo.dart](../../example/lib/platform_view_demo.dart)
+- 物理像素语义：
+  [example/lib/physical_pixel_demo_page.dart](../../example/lib/physical_pixel_demo_page.dart)
+- 键盘与 `MediaQuery/viewInsets`：
+  [example/lib/keyboard_media_query_page.dart](../../example/lib/keyboard_media_query_page.dart)
+
+## 12. 一句话总结
+
+`screen_adapt` 的核心不是“把每个数值乘一个比例”，而是“先重建一套全局逻辑坐标系，再为少数特殊区域提供局部退出机制”。

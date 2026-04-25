@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:example/shared/demo_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:screen_adapt/screen_adapt.dart';
@@ -72,35 +73,35 @@ class _PlatformViewDemoPageState extends State<PlatformViewDemoPage> {
 
     final scale = ScreenSizeUtils.instance.scale;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('PlatformView Adapt Demo')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text('Force scale preset:', style: TextStyle(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: List.generate(_presets.length, (i) {
-              return ChoiceChip(
-                label: Text(_presets[i].$1),
-                selected: _selectedPreset == i,
-                onSelected: (_) => _applyPreset(i),
-              );
-            }),
-          ),
-          const SizedBox(height: 6),
-          Text(
+    return DemoPageScaffold(
+      title: 'PlatformView',
+      subtitle:
+          '此页用于验证 Flutter 全局适配后，原生视图如果不做补偿会发生尺寸失真；使用 AdaptedPlatformView 后应重新对齐。',
+      trailing: Wrap(
+        spacing: 8,
+        children: List.generate(
+          _presets.length,
+          (i) {
+            return ChoiceChip(
+              label: Text(_presets[i].$1),
+              selected: _selectedPreset == i,
+              onSelected: (_) => _applyPreset(i),
+            );
+          },
+        ),
+      ),
+      children: [
+        DemoCard(
+          title: 'Runtime State',
+          child: Text(
             'scale = ${scale.toStringAsFixed(3)}   adapted DPR = ${ScreenSizeUtils.instance.data.devicePixelRatio.toStringAsFixed(2)}',
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
-          const SizedBox(height: 4),
-          const Text(
-            '黄色区域 = Flutter 容器边界。原生视图未填满时可见黄色。',
-            style: TextStyle(fontSize: 12, color: Colors.orange),
-          ),
-          const SizedBox(height: 16),
-          Row(
+        ),
+        const SizedBox(height: 12),
+        DemoCard(
+          title: 'Comparison',
+          subtitle: '黄色区域 = Flutter 容器边界。原生视图未填满或点击异常时，说明未跟随当前适配坐标系。',
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
@@ -110,7 +111,10 @@ class _PlatformViewDemoPageState extends State<PlatformViewDemoPage> {
                   clicks: _normalClicks,
                   child: AndroidView(
                     viewType: _viewType,
-                    creationParams: const {'text': 'Normal', 'message': 'No fix'},
+                    creationParams: const {
+                      'text': 'Normal',
+                      'message': 'No fix'
+                    },
                     creationParamsCodec: const StandardMessageCodec(),
                     onPlatformViewCreated: (id) => _bindChannel(id, false),
                   ),
@@ -126,7 +130,10 @@ class _PlatformViewDemoPageState extends State<PlatformViewDemoPage> {
                   child: AdaptedPlatformView(
                     child: AndroidView(
                       viewType: _viewType,
-                      creationParams: const {'text': 'Adapted', 'message': 'Fixed'},
+                      creationParams: const {
+                        'text': 'Adapted',
+                        'message': 'Fixed'
+                      },
                       creationParamsCodec: const StandardMessageCodec(),
                       onPlatformViewCreated: (id) => _bindChannel(id, true),
                     ),
@@ -136,8 +143,8 @@ class _PlatformViewDemoPageState extends State<PlatformViewDemoPage> {
               ),
             ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -151,7 +158,8 @@ class _PlatformViewDemoPageState extends State<PlatformViewDemoPage> {
     return Column(
       children: [
         Text(label,
-            style: TextStyle(fontWeight: FontWeight.bold, color: labelColor, fontSize: 13)),
+            style: TextStyle(
+                fontWeight: FontWeight.bold, color: labelColor, fontSize: 13)),
         const SizedBox(height: 6),
         _demoBox(child: child, adapted: adapted),
         const SizedBox(height: 4),

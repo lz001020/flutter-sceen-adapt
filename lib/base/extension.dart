@@ -1,6 +1,8 @@
 /// base/extension.dart
 ///
 /// Created by longzhi on 2024/7/29
+library screen_adapt_extension;
+
 import 'package:flutter/widgets.dart'; // 用于 State, StatefulWidget, VoidCallback
 
 /// 一个用于在挂载的窗口小部件上安全调用 setState 的 mixin。
@@ -11,6 +13,6 @@ mixin StateAble<T extends StatefulWidget> on State<T> {
       // 此小部件已卸载，
       return;
     }
-    super.setState(fn); 
+    super.setState(fn);
   }
 }

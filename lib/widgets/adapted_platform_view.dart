@@ -32,6 +32,10 @@ class AdaptedPlatformView extends StatelessWidget {
         final width = constraints.maxWidth;
         final height = constraints.maxHeight;
 
+        if (!width.isFinite || !height.isFinite) {
+          return child;
+        }
+
         final childWidth = width / factor;
         final childHeight = height / factor;
 

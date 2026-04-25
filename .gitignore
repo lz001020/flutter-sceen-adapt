@@ -9,6 +9,7 @@
 .dart_tool
 .claude
 .idea
+.DS_Store
 
 # Flutter repo-specific
 /bin/cache/

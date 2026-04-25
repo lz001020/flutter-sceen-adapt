@@ -1,30 +1,40 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:example/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  testWidgets('home page smoke test', (WidgetTester tester) async {
     await tester.pumpWidget(const MyApp());
+    await tester.pumpAndSettle();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(find.text('screen_adapt demos'), findsOneWidget);
+    expect(find.text('Choose a demo'), findsOneWidget);
+    expect(find.text('Adaptation Gallery'), findsOneWidget);
+    expect(find.text('UnscaledZone'), findsOneWidget);
+    expect(find.text('Pointer Events'), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    final listFinder = find.byType(Scrollable);
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('PlatformView'),
+      300,
+      scrollable: listFinder,
+    );
+    expect(find.text('PlatformView'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('Physical Pixels'),
+      300,
+      scrollable: listFinder,
+    );
+    expect(find.text('Physical Pixels'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('Keyboard & Insets'),
+      300,
+      scrollable: listFinder,
+    );
+    expect(find.text('Keyboard & Insets'), findsOneWidget);
   });
 }
