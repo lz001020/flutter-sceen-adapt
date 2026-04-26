@@ -1,12 +1,10 @@
-// core/screen_size_utils.dart
-//
-// Created by longzhi on 2024/7/29
+// Internal screen metrics and media-query adaptation helpers.
 import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart'; // 引入MediaQueryData, Size等
+import 'package:flutter/widgets.dart';
 
 /// 定义屏幕适配的基准。
 enum ScreenAdaptType {
@@ -179,19 +177,14 @@ extension MediaQueryDataExtension on MediaQueryData {
   /// 基于[ScreenSizeUtils]中的缩放比例[scale]来适配当前的[MediaQueryData]
   MediaQueryData design() {
     final scale = ScreenSizeUtils.instance.scale;
-    
-    // 处理字体缩放策略
+
     double fontScaleFactor = 1.0;
-    
-    // 1. 是否支持系统字体缩放大小 (大字体模式)
+
     if (ScreenSizeUtils.instance.supportSystemTextScale) {
-      fontScaleFactor = textScaler.scale(1); 
+      fontScaleFactor = textScaler.scale(1);
     }
-    
-    // 2. 字体是否跟随屏幕适配的 scale 一起缩放
+
     if (!ScreenSizeUtils.instance.scaleText) {
-      // 因为底层 devicePixelRatio 被乘了 scale，所以字体在物理屏幕上会被放大 scale 倍
-      // 如果不希望字体随屏幕缩放，我们需要在这里除以 scale 来抵消它
       fontScaleFactor = fontScaleFactor / scale;
     }
 

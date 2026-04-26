@@ -5,7 +5,7 @@
 - 怎么接入
 - 遇到局部特殊场景时该用哪个能力
 
-如果你想看底层原理，读 [Concept.md](../../lib/doc/Concept.md)；如果你想看当前限制，读 [KnownIssues.md](../../lib/doc/KnownIssues.md)。
+如果你想看底层原理，读 [Concept.md](../../docs/concepts.md)；如果你想看当前限制，读 [KnownIssues.md](../../docs/known-issues.md)。
 
 ## 1. 接入
 
@@ -18,6 +18,8 @@ import 'package:screen_adapt/screen_adapt.dart';
 void main() {
   DesignSizeWidgetsFlutterBinding.ensureInitialized(
     const Size(375, 667),
+    scaleText: true,
+    supportSystemTextScale: true,
   );
   runApp(const MyApp());
 }
@@ -26,6 +28,50 @@ void main() {
 这是唯一必须的接入步骤。
 
 初始化之后，Flutter 的全局逻辑坐标系会被映射到你的设计稿尺寸语义上。
+
+### 字体策略开关
+
+`DesignSizeWidgetsFlutterBinding.ensureInitialized(...)` 还提供两个和字体相关的参数：
+
+- `scaleText`
+  字体是否跟随全局适配一起缩放
+- `supportSystemTextScale`
+  是否保留系统字体缩放设置
+
+示例：
+
+```dart
+DesignSizeWidgetsFlutterBinding.ensureInitialized(
+  const Size(375, 667),
+  scaleText: true,
+  supportSystemTextScale: false,
+);
+```
+
+这两个参数的组合含义如下：
+
+- `scaleText: true, supportSystemTextScale: true`
+  字体跟随全局适配，同时保留系统大字体
+- `scaleText: true, supportSystemTextScale: false`
+  字体跟随全局适配，但忽略系统大字体
+- `scaleText: false, supportSystemTextScale: true`
+  字体不跟随全局适配，但保留系统大字体
+- `scaleText: false, supportSystemTextScale: false`
+  字体既不跟随全局适配，也不跟随系统大字体
+
+推荐理解：
+
+- 想让整页文字和布局一起按设计稿缩放：`scaleText: true`
+- 想让文字保持更接近设备原始阅读尺寸：`scaleText: false`
+- 想兼容系统无障碍大字体：`supportSystemTextScale: true`
+- 想做强设计稿一致性的展示页或对照 demo：`supportSystemTextScale: false`
+
+注意：
+
+- 当前已经有“初始化时配置字体策略”的开关
+- 当前还没有单独公开“运行时动态切换字体策略”的 API
+- 运行时切设计稿用的是 `DesignSize.of(context).setDesignSize(...)`
+- 字体策略的实际生效点在适配后的 `MediaQuery.textScaler`
 
 ## 2. 适配模式
 
@@ -208,21 +254,21 @@ UnscaledZone(
 示例入口：
 
 - [example/lib/main.dart](../../example/lib/main.dart)
-- [example/lib/home_page.dart](../../example/lib/home_page.dart)
+- [example/lib/app/home_page.dart](../../example/lib/app/home_page.dart)
 
 专题页：
 
-- [example/lib/adaptation_gallery_page.dart](../../example/lib/adaptation_gallery_page.dart)
+- [example/lib/pages/adaptation/adaptation_gallery_page.dart](../../example/lib/pages/adaptation/adaptation_gallery_page.dart)
   看全局适配和设计稿切换
-- [example/lib/unscaled_zone_demo_page.dart](../../example/lib/unscaled_zone_demo_page.dart)
+- [example/lib/pages/unscaled_zone/unscaled_zone_demo_page.dart](../../example/lib/pages/unscaled_zone/unscaled_zone_demo_page.dart)
   看 `UnscaledZone` 两种模式、嵌套、row sibling 影响、重进适配态
-- [example/lib/demo3/pointer_test_page.dart](../../example/lib/demo3/pointer_test_page.dart)
+- [example/lib/pages/input/pointer_events_page.dart](../../example/lib/pages/input/pointer_events_page.dart)
   看点击和拖拽是否准确
-- [example/lib/platform_view_demo.dart](../../example/lib/platform_view_demo.dart)
+- [example/lib/pages/platform_view/platform_view_demo_page.dart](../../example/lib/pages/platform_view/platform_view_demo_page.dart)
   看原生视图补偿
-- [example/lib/physical_pixel_demo_page.dart](../../example/lib/physical_pixel_demo_page.dart)
+- [example/lib/pages/graphics/physical_pixel_demo_page.dart](../../example/lib/pages/graphics/physical_pixel_demo_page.dart)
   看物理像素语义
-- [example/lib/keyboard_media_query_page.dart](../../example/lib/keyboard_media_query_page.dart)
+- [example/lib/pages/input/keyboard_media_query_page.dart](../../example/lib/pages/input/keyboard_media_query_page.dart)
   看键盘与 `viewInsets`
 
 ## 9. 常见判断

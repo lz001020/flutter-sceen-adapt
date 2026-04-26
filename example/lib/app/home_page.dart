@@ -1,10 +1,10 @@
-import 'package:example/adaptation_gallery_page.dart';
-import 'package:example/benchmark_page.dart';
-import 'package:example/keyboard_media_query_page.dart';
-import 'package:example/physical_pixel_demo_page.dart';
-import 'package:example/platform_view_demo.dart';
-import 'package:example/shared/demo_widgets.dart';
-import 'package:example/unscaled_zone_demo_page.dart';
+import 'package:example/pages/adaptation/adaptation_gallery_page.dart';
+import 'package:example/pages/graphics/physical_pixel_demo_page.dart';
+import 'package:example/pages/input/keyboard_media_query_page.dart';
+import 'package:example/pages/performance/benchmark_page.dart';
+import 'package:example/pages/platform_view/platform_view_demo_page.dart';
+import 'package:example/pages/unscaled_zone/unscaled_zone_demo_page.dart';
+import 'package:example/widgets/demo_scaffold.dart';
 import 'package:flutter/material.dart';
 
 class HomePage extends StatelessWidget {

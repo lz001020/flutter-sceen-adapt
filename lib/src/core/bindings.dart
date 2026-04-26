@@ -1,6 +1,4 @@
-/// core/bindings.dart
-///
-/// Created by longzhi on 2024/7/29
+/// Internal binding implementation for screen_adapt.
 library screen_adapt_bindings;
 
 import 'dart:async';
@@ -12,8 +10,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
-import 'package:screen_adapt/core/screen_size_utils.dart';
-import 'package:screen_adapt/widgets/design_size_widget.dart';
+import 'package:screen_adapt/src/core/screen_metrics.dart';
+import 'package:screen_adapt/src/widgets/design_size_scope.dart';
 
 /// 一个自定义的[WidgetsFlutterBinding]，用于提供全局的屏幕适配能力。
 class DesignSizeWidgetsFlutterBinding extends WidgetsFlutterBinding {

@@ -127,6 +127,6 @@
 
 ## 建议的阅读顺序
 
-- 如何接入： [Usage.md](../../lib/doc/Usage.md)
-- 为什么这样设计： [Concept.md](../../lib/doc/Concept.md)
-- 遇到问题怎么排查： [Troubleshooting.md](../../lib/doc/Troubleshooting.md)
+- 如何接入： [Usage.md](../../docs/usage.md)
+- 为什么这样设计： [Concept.md](../../docs/concepts.md)
+- 遇到问题怎么排查： [Troubleshooting.md](../../docs/troubleshooting.md)

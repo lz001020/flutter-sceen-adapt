@@ -16,7 +16,7 @@
 
 参考：
 
-- [example/lib/adaptation_gallery_page.dart](../../example/lib/adaptation_gallery_page.dart)
+- [example/lib/pages/adaptation/adaptation_gallery_page.dart](../../example/lib/pages/adaptation/adaptation_gallery_page.dart)
 
 ## 2. 点击位置偏移 / 拖拽轨迹不对
 
@@ -31,7 +31,7 @@
 
 参考：
 
-- [example/lib/demo3/pointer_test_page.dart](../../example/lib/demo3/pointer_test_page.dart)
+- [example/lib/pages/input/pointer_events_page.dart](../../example/lib/pages/input/pointer_events_page.dart)
 
 ## 3. 某块区域看起来不该被适配
 
@@ -47,7 +47,7 @@
 
 参考：
 
-- [example/lib/unscaled_zone_demo_page.dart](../../example/lib/unscaled_zone_demo_page.dart)
+- [example/lib/pages/unscaled_zone/unscaled_zone_demo_page.dart](../../example/lib/pages/unscaled_zone/unscaled_zone_demo_page.dart)
 
 ## 4. `contextFallback` 看起来变小了，但相邻 widget 还是被推开
 
@@ -88,7 +88,7 @@
 
 如果仍然缩错，建议先在示例页复现：
 
-- [example/lib/unscaled_zone_demo_page.dart](../../example/lib/unscaled_zone_demo_page.dart)
+- [example/lib/pages/unscaled_zone/unscaled_zone_demo_page.dart](../../example/lib/pages/unscaled_zone/unscaled_zone_demo_page.dart)
 
 ## 7. 中间套了 `DesignSizeWidget` 后行为不符合预期
 
@@ -112,7 +112,7 @@
 
 参考：
 
-- [example/lib/platform_view_demo.dart](../../example/lib/platform_view_demo.dart)
+- [example/lib/pages/platform_view/platform_view_demo_page.dart](../../example/lib/pages/platform_view/platform_view_demo_page.dart)
 
 ## 9. 键盘弹出后输入区被遮挡
 
@@ -124,7 +124,7 @@
 
 参考：
 
-- [example/lib/keyboard_media_query_page.dart](../../example/lib/keyboard_media_query_page.dart)
+- [example/lib/pages/input/keyboard_media_query_page.dart](../../example/lib/pages/input/keyboard_media_query_page.dart)
 
 ## 10. 1px 线条发虚
 
@@ -138,7 +138,7 @@
 
 参考：
 
-- [example/lib/physical_pixel_demo_page.dart](../../example/lib/physical_pixel_demo_page.dart)
+- [example/lib/pages/graphics/physical_pixel_demo_page.dart](../../example/lib/pages/graphics/physical_pixel_demo_page.dart)
 
 ## 11. 还不知道该看哪个 demo
 

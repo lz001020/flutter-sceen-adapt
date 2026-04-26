@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:example/shared/demo_widgets.dart';
+import 'package:example/widgets/demo_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:screen_adapt/screen_adapt.dart';

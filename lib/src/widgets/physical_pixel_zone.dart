@@ -1,13 +1,7 @@
-/// component/physical_pixel_zone.dart
-///
-/// Created by longzhi on 2024/7/29
+/// PhysicalPixelZone keeps its child in physical-pixel semantics.
 library screen_adapt_physical_pixel_zone;
 
 import 'package:flutter/cupertino.dart';
-
-// ==========================================================
-// 物理像素精准控制组件 (PhysicalPixelZone)
-// ==========================================================
 
 /// 一个特殊的Widget，其子节点的尺寸单位将直接对应屏幕的物理像素。
 ///
@@ -33,11 +27,6 @@ class PhysicalPixelZone extends StatelessWidget {
       return child;
     }
 
-    // 逻辑：
-    // - 父级给出约束 w×h（适配后逻辑像素）
-    // - OverflowBox 放大约束为 w*dpr × h*dpr，供子节点以"物理像素"为单位布局
-    // - Transform.scale(1/dpr) 将视觉输出缩回 w×h，与父级布局槽匹配
-    // - ClipRect 裁剪防止溢出
     return LayoutBuilder(
       builder: (context, constraints) {
         final double physicalWidth = constraints.maxWidth * dpr;

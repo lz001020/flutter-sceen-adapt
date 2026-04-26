@@ -46,10 +46,32 @@ import 'package:screen_adapt/screen_adapt.dart';
 void main() {
   DesignSizeWidgetsFlutterBinding.ensureInitialized(
     const Size(375, 667),
+    scaleText: true,
+    supportSystemTextScale: true,
   );
   runApp(const MyApp());
 }
 ```
+
+字体相关还有两个开关：
+
+- `scaleText`
+  控制字体是否跟随全局适配一起缩放
+- `supportSystemTextScale`
+  控制是否保留系统字体缩放设置
+
+常见配置：
+
+- `scaleText: true, supportSystemTextScale: true`
+  字体跟随适配，也保留系统大字体
+- `scaleText: true, supportSystemTextScale: false`
+  字体跟随适配，但忽略系统大字体
+- `scaleText: false, supportSystemTextScale: true`
+  字体不跟随适配，但保留系统大字体
+
+更完整的解释见：
+
+- [docs/usage.md](docs/usage.md)
 
 ### 2. 按设计稿尺寸写布局
 
@@ -249,21 +271,21 @@ import 'package:screen_adapt/screen_adapt.dart';
 入口：
 
 - [example/lib/main.dart](example/lib/main.dart)
-- [example/lib/home_page.dart](example/lib/home_page.dart)
+- [example/lib/app/home_page.dart](example/lib/app/home_page.dart)
 
 专题页面：
 
-- [example/lib/adaptation_gallery_page.dart](example/lib/adaptation_gallery_page.dart)
+- [example/lib/pages/adaptation/adaptation_gallery_page.dart](example/lib/pages/adaptation/adaptation_gallery_page.dart)
   全局适配、设计稿切换、字体和布局缩放
-- [example/lib/unscaled_zone_demo_page.dart](example/lib/unscaled_zone_demo_page.dart)
+- [example/lib/pages/unscaled_zone/unscaled_zone_demo_page.dart](example/lib/pages/unscaled_zone/unscaled_zone_demo_page.dart)
   `UnscaledZone` 的 `context / paint / layout` 语义、嵌套、row sibling 影响、重进适配态
-- [example/lib/demo3/pointer_test_page.dart](example/lib/demo3/pointer_test_page.dart)
+- [example/lib/pages/input/pointer_events_page.dart](example/lib/pages/input/pointer_events_page.dart)
   指针事件、拖拽轨迹、命中测试
-- [example/lib/platform_view_demo.dart](example/lib/platform_view_demo.dart)
+- [example/lib/pages/platform_view/platform_view_demo_page.dart](example/lib/pages/platform_view/platform_view_demo_page.dart)
   `PlatformView` 视觉补偿
-- [example/lib/physical_pixel_demo_page.dart](example/lib/physical_pixel_demo_page.dart)
+- [example/lib/pages/graphics/physical_pixel_demo_page.dart](example/lib/pages/graphics/physical_pixel_demo_page.dart)
   物理像素语义和 1px 绘制
-- [example/lib/keyboard_media_query_page.dart](example/lib/keyboard_media_query_page.dart)
+- [example/lib/pages/input/keyboard_media_query_page.dart](example/lib/pages/input/keyboard_media_query_page.dart)
   键盘、`viewInsets`、`MediaQuery` 变化
 
 示例说明见 [example/README.md](example/README.md)。
@@ -277,7 +299,7 @@ import 'package:screen_adapt/screen_adapt.dart';
 
 ## 进一步阅读
 
-- [lib/doc/Usage.md](lib/doc/Usage.md)
-- [lib/doc/Concept.md](lib/doc/Concept.md)
-- [lib/doc/KnownIssues.md](lib/doc/KnownIssues.md)
-- [lib/doc/Troubleshooting.md](lib/doc/Troubleshooting.md)
+- [docs/usage.md](docs/usage.md)
+- [docs/concepts.md](docs/concepts.md)
+- [docs/known-issues.md](docs/known-issues.md)
+- [docs/troubleshooting.md](docs/troubleshooting.md)

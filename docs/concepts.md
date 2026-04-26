@@ -40,7 +40,7 @@
 
 入口在：
 
-- [lib/core/bindings.dart](../../lib/core/bindings.dart)
+- [lib/src/core/bindings.dart](../../lib/src/core/bindings.dart)
 
 它的职责是尽早接管 Flutter 的 view 配置流程。
 
@@ -73,7 +73,7 @@
 
 入口在：
 
-- [lib/core/screen_size_utils.dart](../../lib/core/screen_size_utils.dart)
+- [lib/src/core/screen_metrics.dart](../../lib/src/core/screen_metrics.dart)
 
 它是整个方案的中心状态管理器，负责：
 
@@ -106,7 +106,7 @@
 
 这部分能力可以在示例页里直接验证：
 
-- [example/lib/demo3/pointer_test_page.dart](../../example/lib/demo3/pointer_test_page.dart)
+- [example/lib/pages/input/pointer_events_page.dart](../../example/lib/pages/input/pointer_events_page.dart)
 
 ## 5. 为什么 `UnscaledZone` 不能只靠一个 `Transform.scale`
 
@@ -136,7 +136,7 @@
 
 入口在：
 
-- [lib/widgets/unscaled_zone.dart](../../lib/widgets/unscaled_zone.dart)
+- [lib/src/widgets/unscaled_zone.dart](../../lib/src/widgets/unscaled_zone.dart)
 
 当前实现不是一个“大而全”的 render 容器，而是分层拼装。
 
@@ -223,7 +223,7 @@
 
 当前方案通过：
 
-- [lib/widgets/adapt_scope.dart](../../lib/widgets/adapt_scope.dart)
+- [lib/src/core/adapt_scope.dart](../../lib/src/core/adapt_scope.dart)
 
 显式往下传递当前子树状态：
 
@@ -236,7 +236,7 @@
 
 入口在：
 
-- [lib/widgets/design_size_widget.dart](../../lib/widgets/design_size_widget.dart)
+- [lib/src/widgets/design_size_scope.dart](../../lib/src/widgets/design_size_scope.dart)
 
 它做的不是“重新初始化一套全局适配”，而是：
 
@@ -261,7 +261,7 @@
 
 入口在：
 
-- [lib/widgets/adapted_platform_view.dart](../../lib/widgets/adapted_platform_view.dart)
+- [lib/src/widgets/adapted_platform_view.dart](../../lib/src/widgets/adapted_platform_view.dart)
 
 ### `PhysicalPixelZone`
 
@@ -269,7 +269,7 @@
 
 入口在：
 
-- [lib/component/physical_pixel_zone.dart](../../lib/component/physical_pixel_zone.dart)
+- [lib/src/widgets/physical_pixel_zone.dart](../../lib/src/widgets/physical_pixel_zone.dart)
 
 适合：
 
@@ -279,17 +279,17 @@
 
 ## 11. 从实现到 demo 的映射
 
-- 全局适配： [example/lib/adaptation_gallery_page.dart](../../example/lib/adaptation_gallery_page.dart)
+- 全局适配： [example/lib/pages/adaptation/adaptation_gallery_page.dart](../../example/lib/pages/adaptation/adaptation_gallery_page.dart)
 - `UnscaledZone` 两种模式、嵌套、row sibling 影响、重进适配态：
-  [example/lib/unscaled_zone_demo_page.dart](../../example/lib/unscaled_zone_demo_page.dart)
+  [example/lib/pages/unscaled_zone/unscaled_zone_demo_page.dart](../../example/lib/pages/unscaled_zone/unscaled_zone_demo_page.dart)
 - 指针坐标修正：
-  [example/lib/demo3/pointer_test_page.dart](../../example/lib/demo3/pointer_test_page.dart)
+  [example/lib/pages/input/pointer_events_page.dart](../../example/lib/pages/input/pointer_events_page.dart)
 - 原生视图补偿：
-  [example/lib/platform_view_demo.dart](../../example/lib/platform_view_demo.dart)
+  [example/lib/pages/platform_view/platform_view_demo_page.dart](../../example/lib/pages/platform_view/platform_view_demo_page.dart)
 - 物理像素语义：
-  [example/lib/physical_pixel_demo_page.dart](../../example/lib/physical_pixel_demo_page.dart)
+  [example/lib/pages/graphics/physical_pixel_demo_page.dart](../../example/lib/pages/graphics/physical_pixel_demo_page.dart)
 - 键盘与 `MediaQuery/viewInsets`：
-  [example/lib/keyboard_media_query_page.dart](../../example/lib/keyboard_media_query_page.dart)
+  [example/lib/pages/input/keyboard_media_query_page.dart](../../example/lib/pages/input/keyboard_media_query_page.dart)
 
 ## 12. 一句话总结
 

@@ -1,4 +1,4 @@
-import 'package:example/shared/demo_widgets.dart';
+import 'package:example/widgets/demo_scaffold.dart';
 import 'package:flutter/material.dart';
 
 class KeyboardMediaQueryPage extends StatefulWidget {

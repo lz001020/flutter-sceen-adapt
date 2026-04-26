@@ -1,11 +1,9 @@
-// widgets/unscaled_zone.dart
-//
-// Created by longzhi on 2024/7/29
+// Public UnscaledZone widget and internal render helpers.
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
-import 'package:screen_adapt/core/screen_size_utils.dart';
-import 'package:screen_adapt/widgets/adapt_scope.dart';
+import 'package:screen_adapt/src/core/adapt_scope.dart';
+import 'package:screen_adapt/src/core/screen_metrics.dart';
 
 /// `UnscaledZone` 的反适配模式。
 enum UnscaledZoneMode {

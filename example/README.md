@@ -46,7 +46,7 @@ DesignSizeWidgetsFlutterBinding.ensureInitialized(
 
 首页在：
 
-- [example/lib/home_page.dart](example/lib/home_page.dart)
+- [example/lib/app/home_page.dart](example/lib/app/home_page.dart)
 
 作用：
 
@@ -60,7 +60,7 @@ DesignSizeWidgetsFlutterBinding.ensureInitialized(
 
 文件：
 
-- [example/lib/adaptation_gallery_page.dart](example/lib/adaptation_gallery_page.dart)
+- [example/lib/pages/adaptation/adaptation_gallery_page.dart](example/lib/pages/adaptation/adaptation_gallery_page.dart)
 
 重点看：
 
@@ -77,7 +77,7 @@ DesignSizeWidgetsFlutterBinding.ensureInitialized(
 
 文件：
 
-- [example/lib/unscaled_zone_demo_page.dart](example/lib/unscaled_zone_demo_page.dart)
+- [example/lib/pages/unscaled_zone/unscaled_zone_demo_page.dart](example/lib/pages/unscaled_zone/unscaled_zone_demo_page.dart)
 
 重点看：
 
@@ -93,7 +93,7 @@ DesignSizeWidgetsFlutterBinding.ensureInitialized(
 
 文件：
 
-- [example/lib/demo3/pointer_test_page.dart](example/lib/demo3/pointer_test_page.dart)
+- [example/lib/pages/input/pointer_events_page.dart](example/lib/pages/input/pointer_events_page.dart)
 
 重点看：
 
@@ -109,7 +109,7 @@ DesignSizeWidgetsFlutterBinding.ensureInitialized(
 
 文件：
 
-- [example/lib/platform_view_demo.dart](example/lib/platform_view_demo.dart)
+- [example/lib/pages/platform_view/platform_view_demo_page.dart](example/lib/pages/platform_view/platform_view_demo_page.dart)
 
 重点看：
 
@@ -125,7 +125,7 @@ DesignSizeWidgetsFlutterBinding.ensureInitialized(
 
 文件：
 
-- [example/lib/physical_pixel_demo_page.dart](example/lib/physical_pixel_demo_page.dart)
+- [example/lib/pages/graphics/physical_pixel_demo_page.dart](example/lib/pages/graphics/physical_pixel_demo_page.dart)
 
 重点看：
 
@@ -140,7 +140,7 @@ DesignSizeWidgetsFlutterBinding.ensureInitialized(
 
 文件：
 
-- [example/lib/keyboard_media_query_page.dart](example/lib/keyboard_media_query_page.dart)
+- [example/lib/pages/input/keyboard_media_query_page.dart](example/lib/pages/input/keyboard_media_query_page.dart)
 
 重点看：
 
@@ -166,7 +166,7 @@ DesignSizeWidgetsFlutterBinding.ensureInitialized(
 ## 和主文档的关系
 
 - 根说明： [README.md](README.md)
-- 接入指南： [lib/doc/Usage.md](lib/doc/Usage.md)
-- 设计原理： [lib/doc/Concept.md](lib/doc/Concept.md)
-- 已知问题： [lib/doc/KnownIssues.md](lib/doc/KnownIssues.md)
-- 排查指南： [lib/doc/Troubleshooting.md](lib/doc/Troubleshooting.md)
+- 接入指南： [docs/usage.md](docs/usage.md)
+- 设计原理： [docs/concepts.md](docs/concepts.md)
+- 已知问题： [docs/known-issues.md](docs/known-issues.md)
+- 排查指南： [docs/troubleshooting.md](docs/troubleshooting.md)

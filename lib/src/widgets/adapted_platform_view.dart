@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:screen_adapt/core/screen_size_utils.dart';
+import 'package:screen_adapt/src/core/screen_metrics.dart';
 
 /// 针对 PlatformView（如 WebView, Map, Video）的视觉对齐包装器。
 ///

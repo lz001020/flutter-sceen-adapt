@@ -10,6 +10,13 @@
 .claude
 .idea
 .DS_Store
+.claude/
+.idea/
+.dart_tool/
+build/
+example/.dart_tool/
+example/build/
+example/.idea/
 
 # Flutter repo-specific
 /bin/cache/
@@ -35,14 +42,12 @@ analysis_benchmark.json
 
 # Flutter/Dart/Pub related
 **/doc/api/
-.dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
 **/generated_plugin_registrant.dart
 .packages
 .pub-preload-cache/
 .pub/
-build/
 flutter_*.png
 linked_*.ds
 unlinked.ds
