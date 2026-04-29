@@ -132,6 +132,129 @@ DesignSize.of(context).reset();
 
 这类能力已经在示例工程首页和各专题 demo 里集成。
 
+## 从 `flutter_screenutil` 过渡
+
+如果你的项目当前已经大量使用 `.w / .h / .sp`，不建议在同一子树里直接和
+`screen_adapt` 混用。更稳妥的做法是：
+
+1. 先在根部接入 `DesignSizeWidgetsFlutterBinding.ensureInitialized(...)`
+2. 把尚未迁移的旧页面整体包进 `LegacyScreenUtilScope`
+3. 在这个兼容壳内部继续使用 `ScreenUtilInit`
+4. 按页迁移完成后，再去掉 `ScreenUtilInit` 和 `.w / .h / .sp`
+
+根接入替换可以直接按下面改。
+
+迁移前：
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+void main() {
+  runApp(
+    ScreenUtilInit(
+      designSize: const Size(375, 812),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (_, __) => const MyApp(),
+    ),
+  );
+}
+```
+
+迁移后：
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:screen_adapt/screen_adapt.dart';
+
+void main() {
+  DesignSizeWidgetsFlutterBinding.ensureInitialized(
+    const Size(375, 812),
+    type: ScreenAdaptType.width,
+    scaleText: true,
+    supportSystemTextScale: true,
+  );
+  runApp(const MyApp());
+}
+```
+
+也就是说：
+
+- `ScreenUtilInit` 不再放在应用根部
+- 根部改成 `DesignSizeWidgetsFlutterBinding.ensureInitialized(...)`
+- `MaterialApp` 可以保持原来结构
+- 只有还没迁完的旧页面，才在路由或页面入口处套 `LegacyScreenUtilScope`
+
+示例：
+
+```dart
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:screen_adapt/screen_adapt.dart';
+
+class LegacyEntryPage extends StatelessWidget {
+  const LegacyEntryPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return LegacyScreenUtilScope(
+      child: ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, __) => const LegacyOrderPage(),
+      ),
+    );
+  }
+}
+```
+
+如果你的旧项目原来是“`ScreenUtilInit.builder` 里直接返回 `MaterialApp`”，
+迁移后通常就是把 `MaterialApp` 原样放回 `runApp(const MyApp())` 这条链路里，
+不用再额外套初始化容器。
+
+如果你想把入口层样板再压缩一点，可以直接用 `legacyMaterialPageRoute(...)`：
+
+```dart
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:screen_adapt/screen_adapt.dart';
+
+Route<void> buildLegacyOrderRoute() {
+  return legacyMaterialPageRoute(
+    builder: (_) => const OldOrderPage(),
+    wrapChild: (_, child) => ScreenUtilInit(
+      designSize: const Size(375, 812),
+      builder: (_, __) => child,
+    ),
+  );
+}
+```
+
+如果你更喜欢先在业务项目里封一层自己的 helper，也可以直接这样写：
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:screen_adapt/screen_adapt.dart';
+
+Widget legacyScreenUtilPage(
+  Widget child, {
+  Size designSize = const Size(375, 812),
+}) {
+  return LegacyScreenUtilScope(
+    child: ScreenUtilInit(
+      designSize: designSize,
+      builder: (_, __) => child,
+    ),
+  );
+}
+```
+
+迁移规则通常是：
+
+- `180.w / 180.h / 16.sp / 20.r` 逐步改回 `180 / 180 / 16 / 20`
+- `1.sw / 1.sh` 优先改成标准 Flutter 布局或 `MediaQuery.sizeOf(context)`
+- 整页旧模块优先用 `LegacyScreenUtilScope`
+- 单个特殊区域优先用 `UnscaledZone`
+
 ## `UnscaledZone`
 
 `UnscaledZone` 用来处理“全局适配已经打开，但某个局部区域不应该跟着适配”的场景。
@@ -258,6 +381,9 @@ import 'package:screen_adapt/screen_adapt.dart';
 - `ScreenSizeUtils.instance`
 - `DesignSize.of(context).setDesignSize(...)`
 - `DesignSize.of(context).reset()`
+- `LegacyScreenUtilScope`
+- `legacyScopeBuilder(...)`
+- `legacyMaterialPageRoute(...)`
 - `DesignSizeWidget`
 - `UnscaledZone`
 - `UnscaledZoneMode`

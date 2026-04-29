@@ -9,3 +9,5 @@ Initial public release.
 - `PhysicalPixelZone` for sub-logical-pixel drawing
 - `DesignSizeWidget` for runtime design-size switching
 - `AdaptScope` for explicit nested unscale-state propagation
+- `LegacyScreenUtilScope` for isolating legacy `flutter_screenutil` pages during migration
+- `legacyScopeBuilder` and `legacyMaterialPageRoute` to reduce legacy route boilerplate
