@@ -46,6 +46,7 @@ import 'package:screen_adapt/screen_adapt.dart';
 void main() {
   DesignSizeWidgetsFlutterBinding.ensureInitialized(
     const Size(375, 667),
+    type: ScreenAdaptType.width,
     scaleText: true,
     supportSystemTextScale: true,
   );
@@ -105,8 +106,9 @@ class DemoPage extends StatelessWidget {
 
 `DesignSizeWidgetsFlutterBinding.ensureInitialized(...)` 支持 `ScreenAdaptType`：
 
+- 建议业务项目显式传入 `type`，不要依赖默认值
 - `ScreenAdaptType.width`
-  按宽度适配。默认模式，最常用。
+  按宽度适配。最常用的手机业务模式。
 - `ScreenAdaptType.height`
   按高度适配。适合高度基准更强的页面。
 - `ScreenAdaptType.min`
@@ -423,9 +425,38 @@ import 'package:screen_adapt/screen_adapt.dart';
 - `PhysicalPixelZone` 主要改变内部绘制语义，不会自动改变外层占位
 - 当前实现仍主要围绕单 view 场景设计，多窗口 / 多 view 支持有限
 
+## Roadmap
+
+这个项目的目标不是再做一组 `.w / .h / .sp` 扩展方法，而是逐步把 Flutter 中的
+“设计稿尺寸语义”上移到更底层的运行时链路里。
+
+当前 roadmap 可以概括为：
+
+| 阶段 | 目标 | 核心能力 | 当前状态 |
+|---|---|---|---|
+| 1 | 手机端全局适配基线 | `DesignSizeWidgetsFlutterBinding`、`ViewConfiguration` 重写、指针事件坐标补偿 | ✅ 已实现 |
+| 2 | 补齐全局适配后的例外场景 | `UnscaledZone`、`AdaptedPlatformView`、`PhysicalPixelZone`、字体与 `MediaQuery` / 键盘 / `viewInsets` 行为校准 | ✅ 已实现并持续完善 |
+| 3 | 提供可落地的迁移与验证体系 | `flutter_screenutil` 迁移方案、`LegacyScreenUtilScope`、example 专题验证页面、benchmark、已知限制与排查文档 | ✅ 已实现并持续完善 |
+| 4 | 向多形态设备策略化演进 | 大屏 / 展开态窗口布局、居中窗口与偏移补偿、可扩展的策略抽象、更清晰的桌面与多终端产品语义 | 🚧 规划中 |
+
 ## 进一步阅读
 
+- [docs/README.md](docs/README.md)
+- [docs/adoption-guide.md](docs/adoption-guide.md)
+- [docs/decision-brief.md](docs/decision-brief.md)
+- [docs/project-template.md](docs/project-template.md)
 - [docs/usage.md](docs/usage.md)
 - [docs/concepts.md](docs/concepts.md)
 - [docs/known-issues.md](docs/known-issues.md)
 - [docs/troubleshooting.md](docs/troubleshooting.md)
+
+## 灵感来源
+
+这个方案的整体方向参考了 Android 端开源项目
+[`JessYanCoding/AndroidAutoSize`](https://github.com/JessYanCoding/AndroidAutoSize)。
+
+`AndroidAutoSize` 本身是一个 “low-cost Android screen adaptation solution”，
+仓库说明里也直接提到它是“今日头条屏幕适配方案终极版”。
+
+`screen_adapt` 不是对该方案的直接移植；它是结合 Flutter 的 `WidgetsFlutterBinding`、
+`ViewConfiguration`、`MediaQuery` 和指针事件链路，按 Flutter 运行时模型重新实现的一套适配思路。

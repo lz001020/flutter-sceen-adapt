@@ -6,6 +6,7 @@
 - 遇到局部特殊场景时该用哪个能力
 
 如果你想看底层原理，读 [Concept.md](../../docs/concepts.md)；如果你想看当前限制，读 [KnownIssues.md](../../docs/known-issues.md)。
+如果你还不清楚整套文档怎么分工，先看 [文档导航](../../docs/README.md)。
 
 ## 1. 接入
 
@@ -18,6 +19,7 @@ import 'package:screen_adapt/screen_adapt.dart';
 void main() {
   DesignSizeWidgetsFlutterBinding.ensureInitialized(
     const Size(375, 667),
+    type: ScreenAdaptType.width,
     scaleText: true,
     supportSystemTextScale: true,
   );
@@ -77,8 +79,9 @@ DesignSizeWidgetsFlutterBinding.ensureInitialized(
 
 `DesignSizeWidgetsFlutterBinding.ensureInitialized(...)` 支持 `ScreenAdaptType`：
 
+- 建议业务项目显式传入 `type`，不要依赖默认值
 - `ScreenAdaptType.width`
-  默认模式，按宽度适配
+  按宽度适配
 - `ScreenAdaptType.height`
   按高度适配
 - `ScreenAdaptType.min`
