@@ -60,7 +60,6 @@ int _levelRuns(_BenchLevel level) {
   };
 }
 
-
 class BenchmarkPage extends StatefulWidget {
   const BenchmarkPage({super.key});
 
@@ -100,7 +99,8 @@ class _BenchmarkPageState extends State<BenchmarkPage> {
               ),
               IconButton(
                 tooltip: 'Home',
-                onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
+                onPressed: () =>
+                    Navigator.of(context).popUntil((r) => r.isFirst),
                 icon: const Icon(Icons.home_outlined),
               ),
             ],
@@ -131,7 +131,9 @@ class _BenchmarkPageState extends State<BenchmarkPage> {
                 child: TabBarView(
                   children: [
                     _BenchmarkTab(useScreenUtil: false, profile: _profile),
-                    _ScreenUtilWrapper(child: _BenchmarkTab(useScreenUtil: true, profile: _profile)),
+                    _ScreenUtilWrapper(
+                        child: _BenchmarkTab(
+                            useScreenUtil: true, profile: _profile)),
                   ],
                 ),
               ),
@@ -164,7 +166,8 @@ class _GuideDrawer extends StatelessWidget {
                   const Expanded(
                     child: Text(
                       'How to run · 新手引导',
-                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                      style:
+                          TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
                     ),
                   ),
                   IconButton(
@@ -215,13 +218,20 @@ class _GuideDrawer extends StatelessWidget {
                 child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Interpretation', style: TextStyle(fontWeight: FontWeight.w700)),
+                    Text('Interpretation',
+                        style: TextStyle(fontWeight: FontWeight.w700)),
                     SizedBox(height: 8),
-                    Text('• p95/p99/max 越低越好，表示卡顿尾部更稳。', style: TextStyle(fontSize: 12, color: Color(0xFF4B4A43))),
+                    Text('• p95/p99/max 越低越好，表示卡顿尾部更稳。',
+                        style:
+                            TextStyle(fontSize: 12, color: Color(0xFF4B4A43))),
                     SizedBox(height: 4),
-                    Text('• buildHits 越低，说明可复用子树越多。', style: TextStyle(fontSize: 12, color: Color(0xFF4B4A43))),
+                    Text('• buildHits 越低，说明可复用子树越多。',
+                        style:
+                            TextStyle(fontSize: 12, color: Color(0xFF4B4A43))),
                     SizedBox(height: 4),
-                    Text('• 红色代表慢，绿色代表快。', style: TextStyle(fontSize: 12, color: Color(0xFF4B4A43))),
+                    Text('• 红色代表慢，绿色代表快。',
+                        style:
+                            TextStyle(fontSize: 12, color: Color(0xFF4B4A43))),
                   ],
                 ),
               ),
@@ -254,11 +264,14 @@ class _GuideStep extends StatelessWidget {
           ),
           child: Text(
             '$index',
-            style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
+            style: const TextStyle(
+                color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
           ),
         ),
         const SizedBox(width: 8),
-        Expanded(child: Text(text, style: const TextStyle(color: Color(0xFF4B4A43)))),
+        Expanded(
+            child:
+                Text(text, style: const TextStyle(color: Color(0xFF4B4A43)))),
       ],
     );
   }
@@ -347,7 +360,9 @@ class _LevelChip extends StatelessWidget {
                 subLabel,
                 style: TextStyle(
                   fontSize: 10,
-                  color: selected ? const Color(0xFFE2E8FF) : const Color(0xFF7A766E),
+                  color: selected
+                      ? const Color(0xFFE2E8FF)
+                      : const Color(0xFF7A766E),
                 ),
               ),
             ],
@@ -366,23 +381,23 @@ class _BenchmarkModeTabs extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFFE3E2DA)),
       ),
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(2),
       child: TabBar(
         indicator: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(10),
           color: const Color(0xFF1F3C88),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: Colors.transparent,
         labelColor: Colors.white,
         unselectedLabelColor: const Color(0xFF666257),
-        labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+        labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11),
         tabs: const [
-          Tab(text: 'screen_adapt'),
-          Tab(text: 'flutter_screenutil'),
+          Tab(height: 30, text: 'screen_adapt'),
+          Tab(height: 30, text: 'flutter_screenutil'),
         ],
       ),
     );
@@ -429,7 +444,8 @@ class _SeriesStats {
     required this.max,
   });
 
-  static const zero = _SeriesStats(avg: 0, min: 0, p50: 0, p95: 0, p99: 0, max: 0);
+  static const zero =
+      _SeriesStats(avg: 0, min: 0, p50: 0, p95: 0, p99: 0, max: 0);
 
   final int avg;
   final int min;
@@ -480,17 +496,33 @@ class _BenchmarkSnapshot {
 }
 
 class _BenchmarkHistory extends ChangeNotifier {
-  _BenchmarkSnapshot? screenAdapt;
-  _BenchmarkSnapshot? flutterScreenUtil;
+  final Map<_BenchLevel, _BenchmarkSnapshot?> _screenAdaptByLevel = {
+    _BenchLevel.simple: null,
+    _BenchLevel.medium: null,
+    _BenchLevel.stress: null,
+  };
+  final Map<_BenchLevel, _BenchmarkSnapshot?> _screenUtilByLevel = {
+    _BenchLevel.simple: null,
+    _BenchLevel.medium: null,
+    _BenchLevel.stress: null,
+  };
 
-  void store({required bool useScreenUtil, required _BenchmarkSnapshot snapshot}) {
+  void store(
+      {required _BenchLevel level,
+      required bool useScreenUtil,
+      required _BenchmarkSnapshot snapshot}) {
     if (useScreenUtil) {
-      flutterScreenUtil = snapshot;
+      _screenUtilByLevel[level] = snapshot;
     } else {
-      screenAdapt = snapshot;
+      _screenAdaptByLevel[level] = snapshot;
     }
     notifyListeners();
   }
+
+  _BenchmarkSnapshot? screenAdaptOf(_BenchLevel level) =>
+      _screenAdaptByLevel[level];
+  _BenchmarkSnapshot? screenUtilOf(_BenchLevel level) =>
+      _screenUtilByLevel[level];
 }
 
 class _BenchmarkHistoryScope extends InheritedWidget {
@@ -499,11 +531,14 @@ class _BenchmarkHistoryScope extends InheritedWidget {
   final _BenchmarkHistory history;
 
   static _BenchmarkHistory of(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<_BenchmarkHistoryScope>()!.history;
+    return context
+        .dependOnInheritedWidgetOfExactType<_BenchmarkHistoryScope>()!
+        .history;
   }
 
   @override
-  bool updateShouldNotify(_BenchmarkHistoryScope oldWidget) => !identical(history, oldWidget.history);
+  bool updateShouldNotify(_BenchmarkHistoryScope oldWidget) =>
+      !identical(history, oldWidget.history);
 }
 
 class _BenchmarkTab extends StatefulWidget {
@@ -595,9 +630,11 @@ class _BenchmarkTabState extends State<_BenchmarkTab> {
 
     if (_uiTimes.length >= _runs) {
       _BenchmarkHistoryScope.of(context).store(
+        level: widget.profile.level,
         useScreenUtil: widget.useScreenUtil,
         snapshot: _BenchmarkSnapshot(
-          modeLabel: widget.useScreenUtil ? 'flutter_screenutil' : 'screen_adapt',
+          modeLabel:
+              widget.useScreenUtil ? 'flutter_screenutil' : 'screen_adapt',
           runs: _uiTimes.length,
           ui: _uiStats,
           raster: _rasterStats,
@@ -620,16 +657,20 @@ class _BenchmarkTabState extends State<_BenchmarkTab> {
 
   String _formatMs(int micros) => (micros / 1000).toStringAsFixed(2);
 
-  String _formatSeriesLine(String label, _SeriesStats stats, {bool micros = true}) {
+  String _formatSeriesLine(String label, _SeriesStats stats,
+      {bool micros = true}) {
     String value(int raw) => micros ? '${_formatMs(raw)}ms' : '$raw';
     return '$label avg=${value(stats.avg)} min=${value(stats.min)} p50=${value(stats.p50)} p95=${value(stats.p95)} p99=${value(stats.p99)} max=${value(stats.max)}';
   }
 
   String get _exportText {
     final b = StringBuffer()
-      ..writeln('mode: ${widget.useScreenUtil ? 'flutter_screenutil' : 'screen_adapt'}')
-      ..writeln('timing_source: SchedulerBinding.addTimingsCallback / FrameTiming')
-      ..writeln('note: ui = framework UI thread time, covering build + layout + paint')
+      ..writeln(
+          'mode: ${widget.useScreenUtil ? 'flutter_screenutil' : 'screen_adapt'}')
+      ..writeln(
+          'timing_source: SchedulerBinding.addTimingsCallback / FrameTiming')
+      ..writeln(
+          'note: ui = framework UI thread time, covering build + layout + paint')
       ..writeln('item_count: $_itemCount')
       ..writeln('configured_runs: $_runs')
       ..writeln('captured_runs: ${_uiTimes.length}')
@@ -655,7 +696,8 @@ class _BenchmarkTabState extends State<_BenchmarkTab> {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Copied ${_uiTimes.length} samples for ${widget.useScreenUtil ? 'flutter_screenutil' : 'screen_adapt'}.'),
+        content: Text(
+            'Copied ${_uiTimes.length} samples for ${widget.useScreenUtil ? 'flutter_screenutil' : 'screen_adapt'}.'),
       ),
     );
   }
@@ -684,8 +726,8 @@ class _BenchmarkTabState extends State<_BenchmarkTab> {
           builder: (context, _) {
             final history = _BenchmarkHistoryScope.of(context);
             return _ComparePanel(
-              screenAdapt: history.screenAdapt,
-              flutterScreenUtil: history.flutterScreenUtil,
+              screenAdapt: history.screenAdaptOf(widget.profile.level),
+              flutterScreenUtil: history.screenUtilOf(widget.profile.level),
             );
           },
         ),
@@ -703,7 +745,8 @@ class _BenchmarkTabState extends State<_BenchmarkTab> {
         ),
         if (_uiTimes.isNotEmpty)
           _ExportPanel(
-            modeLabel: widget.useScreenUtil ? 'flutter_screenutil' : 'screen_adapt',
+            modeLabel:
+                widget.useScreenUtil ? 'flutter_screenutil' : 'screen_adapt',
             runs: _uiTimes.length,
             exportText: _exportText,
             onCopy: () => _copyExport(context),
@@ -751,8 +794,10 @@ class _StatsBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progress = configuredRuns == 0 ? 0.0 : (runs / configuredRuns).clamp(0.0, 1.0);
-    final accent = useScreenUtil ? const Color(0xFFBC6C25) : const Color(0xFF2D6A4F);
+    final progress =
+        configuredRuns == 0 ? 0.0 : (runs / configuredRuns).clamp(0.0, 1.0);
+    final accent =
+        useScreenUtil ? const Color(0xFFBC6C25) : const Color(0xFF2D6A4F);
 
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 10, 12, 0),
@@ -774,7 +819,8 @@ class _StatsBar extends StatelessWidget {
               Container(
                 width: 10,
                 height: 10,
-                decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
+                decoration:
+                    BoxDecoration(color: accent, shape: BoxShape.circle),
               ),
               const SizedBox(width: 8),
               Text(
@@ -788,7 +834,11 @@ class _StatsBar extends StatelessWidget {
                   color: accent.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: Text('Runs $runs/$configuredRuns', style: TextStyle(fontSize: 11, color: accent, fontWeight: FontWeight.w700)),
+                child: Text('Runs $runs/$configuredRuns',
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: accent,
+                        fontWeight: FontWeight.w700)),
               ),
             ],
           ),
@@ -839,18 +889,45 @@ class _StatsBar extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            _MetricLine(label: 'ui', avg: _ms(uiStats.avg), p95: _ms(uiStats.p95), p99: _ms(uiStats.p99), max: _ms(uiStats.max)),
-            _MetricLine(label: 'raster', avg: _ms(rasterStats.avg), p95: _ms(rasterStats.p95), p99: _ms(rasterStats.p99), max: _ms(rasterStats.max)),
-            _MetricLine(label: 'total', avg: _ms(totalStats.avg), p95: _ms(totalStats.p95), p99: _ms(totalStats.p99), max: _ms(totalStats.max)),
-            _MetricLine(label: 'buildHits', avg: '${buildHitStats.avg}', p95: '${buildHitStats.p95}', p99: '${buildHitStats.p99}', max: '${buildHitStats.max}'),
-            _MetricLine(label: 'vsync', avg: _ms(vsyncStats.avg), p95: _ms(vsyncStats.p95), p99: _ms(vsyncStats.p99), max: _ms(vsyncStats.max)),
+            _MetricLine(
+                label: 'ui',
+                avg: _ms(uiStats.avg),
+                p95: _ms(uiStats.p95),
+                p99: _ms(uiStats.p99),
+                max: _ms(uiStats.max)),
+            _MetricLine(
+                label: 'raster',
+                avg: _ms(rasterStats.avg),
+                p95: _ms(rasterStats.p95),
+                p99: _ms(rasterStats.p99),
+                max: _ms(rasterStats.max)),
+            _MetricLine(
+                label: 'total',
+                avg: _ms(totalStats.avg),
+                p95: _ms(totalStats.p95),
+                p99: _ms(totalStats.p99),
+                max: _ms(totalStats.max)),
+            _MetricLine(
+                label: 'buildHits',
+                avg: '${buildHitStats.avg}',
+                p95: '${buildHitStats.p95}',
+                p99: '${buildHitStats.p99}',
+                max: '${buildHitStats.max}'),
+            _MetricLine(
+                label: 'vsync',
+                avg: _ms(vsyncStats.avg),
+                p95: _ms(vsyncStats.p95),
+                p99: _ms(vsyncStats.p99),
+                max: _ms(vsyncStats.max)),
           ],
           const SizedBox(height: 10),
           Align(
             alignment: Alignment.centerRight,
             child: FilledButton.icon(
               onPressed: running ? null : onStart,
-              icon: Icon(running ? Icons.hourglass_top_rounded : Icons.play_arrow_rounded),
+              icon: Icon(running
+                  ? Icons.hourglass_top_rounded
+                  : Icons.play_arrow_rounded),
               label: Text(running ? 'Running...' : 'Run Benchmark'),
             ),
           ),
@@ -889,9 +966,13 @@ class _PerfGauge extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w700)),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 10, color: color, fontWeight: FontWeight.w700)),
           const SizedBox(height: 4),
-          Text(value, style: TextStyle(fontSize: 16, color: color, fontWeight: FontWeight.w800)),
+          Text(value,
+              style: TextStyle(
+                  fontSize: 16, color: color, fontWeight: FontWeight.w800)),
         ],
       ),
     );
@@ -926,7 +1007,8 @@ class _MetricLine extends StatelessWidget {
 }
 
 class _ComparePanel extends StatelessWidget {
-  const _ComparePanel({required this.screenAdapt, required this.flutterScreenUtil});
+  const _ComparePanel(
+      {required this.screenAdapt, required this.flutterScreenUtil});
 
   final _BenchmarkSnapshot? screenAdapt;
   final _BenchmarkSnapshot? flutterScreenUtil;
@@ -935,12 +1017,16 @@ class _ComparePanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (screenAdapt == null && flutterScreenUtil == null) return const SizedBox.shrink();
+    if (screenAdapt == null && flutterScreenUtil == null)
+      return const SizedBox.shrink();
 
     final winner = _winner(screenAdapt, flutterScreenUtil);
     final hasBoth = screenAdapt != null && flutterScreenUtil != null;
-    final uiP95Delta = hasBoth ? (flutterScreenUtil!.ui.p95 - screenAdapt!.ui.p95) : null;
-    final totalP95Delta = hasBoth ? (flutterScreenUtil!.total.p95 - screenAdapt!.total.p95) : null;
+    final uiP95Delta =
+        hasBoth ? (flutterScreenUtil!.ui.p95 - screenAdapt!.ui.p95) : null;
+    final totalP95Delta = hasBoth
+        ? (flutterScreenUtil!.total.p95 - screenAdapt!.total.p95)
+        : null;
 
     return Container(
       width: double.infinity,
@@ -954,7 +1040,8 @@ class _ComparePanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Latest Comparison', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+          const Text('Latest Comparison',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
           const SizedBox(height: 6),
           if (hasBoth)
             Wrap(
@@ -974,14 +1061,17 @@ class _ComparePanel extends StatelessWidget {
               ],
             )
           else
-            const Text('先把两个 Tab 都跑完，系统会自动给出差值与百分比。', style: TextStyle(fontSize: 12, color: Color(0xFF666257))),
+            const Text('先把两个 Tab 都跑完，系统会自动给出差值与百分比。',
+                style: TextStyle(fontSize: 12, color: Color(0xFF666257))),
           if (winner != null) ...[
             const SizedBox(height: 8),
             Text(
               winner == 'draw' ? '结果接近：两边 ui p95 相同。' : '当前胜出（ui p95）: $winner',
               style: TextStyle(
                 fontSize: 12,
-                color: winner == 'draw' ? const Color(0xFF6A6254) : const Color(0xFF2D6A4F),
+                color: winner == 'draw'
+                    ? const Color(0xFF6A6254)
+                    : const Color(0xFF2D6A4F),
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -1042,7 +1132,8 @@ class _DeltaPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final slower = deltaMicros > 0;
     final faster = deltaMicros < 0;
-    final ratio = baselineMicros == 0 ? 0.0 : (deltaMicros / baselineMicros * 100);
+    final ratio =
+        baselineMicros == 0 ? 0.0 : (deltaMicros / baselineMicros * 100);
     final color = slower
         ? const Color(0xFFB3261E)
         : faster
@@ -1058,7 +1149,8 @@ class _DeltaPill extends StatelessWidget {
       ),
       child: Text(
         '$label ${deltaMicros >= 0 ? '+' : ''}${(deltaMicros / 1000).toStringAsFixed(1)}ms (${ratio >= 0 ? '+' : ''}${ratio.toStringAsFixed(1)}%)',
-        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: color),
+        style:
+            TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: color),
       ),
     );
   }
@@ -1089,15 +1181,20 @@ class _CompareCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: highlight ? accent.withValues(alpha: 0.08) : Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: highlight ? accent : accent.withValues(alpha: 0.35), width: highlight ? 1.6 : 1),
+        border: Border.all(
+            color: highlight ? accent : accent.withValues(alpha: 0.35),
+            width: highlight ? 1.6 : 1),
       ),
       child: snapshot == null
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(fontWeight: FontWeight.w800, color: accent)),
+                Text(title,
+                    style:
+                        TextStyle(fontWeight: FontWeight.w800, color: accent)),
                 const SizedBox(height: 8),
-                const Text('No completed run yet.', style: TextStyle(fontSize: 12, color: Color(0xFF666257))),
+                const Text('No completed run yet.',
+                    style: TextStyle(fontSize: 12, color: Color(0xFF666257))),
               ],
             )
           : Column(
@@ -1105,26 +1202,45 @@ class _CompareCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Expanded(child: Text(title, style: TextStyle(fontWeight: FontWeight.w800, color: accent))),
+                    Expanded(
+                        child: Text(title,
+                            style: TextStyle(
+                                fontWeight: FontWeight.w800, color: accent))),
                     if (highlight)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: accent,
                           borderRadius: BorderRadius.circular(999),
                         ),
-                        child: const Text('WIN', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800)),
+                        child: const Text('WIN',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800)),
                       ),
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text('${snapshot!.runs} runs', style: const TextStyle(fontSize: 12, color: Color(0xFF666257))),
+                Text('${snapshot!.runs} runs',
+                    style: const TextStyle(
+                        fontSize: 12, color: Color(0xFF666257))),
                 const SizedBox(height: 8),
-                Text('ui p95 ${ms(snapshot!.ui.p95)}  p99 ${ms(snapshot!.ui.p99)}  max ${ms(snapshot!.ui.max)}', style: const TextStyle(fontFamily: 'monospace', fontSize: 11)),
+                Text(
+                    'ui p95 ${ms(snapshot!.ui.p95)}  p99 ${ms(snapshot!.ui.p99)}  max ${ms(snapshot!.ui.max)}',
+                    style:
+                        const TextStyle(fontFamily: 'monospace', fontSize: 11)),
                 const SizedBox(height: 2),
-                Text('total p95 ${ms(snapshot!.total.p95)}  p99 ${ms(snapshot!.total.p99)}  max ${ms(snapshot!.total.max)}', style: const TextStyle(fontFamily: 'monospace', fontSize: 11)),
+                Text(
+                    'total p95 ${ms(snapshot!.total.p95)}  p99 ${ms(snapshot!.total.p99)}  max ${ms(snapshot!.total.max)}',
+                    style:
+                        const TextStyle(fontFamily: 'monospace', fontSize: 11)),
                 const SizedBox(height: 2),
-                Text('buildHits p95 ${snapshot!.buildHits.p95}  p99 ${snapshot!.buildHits.p99}', style: const TextStyle(fontFamily: 'monospace', fontSize: 11)),
+                Text(
+                    'buildHits p95 ${snapshot!.buildHits.p95}  p99 ${snapshot!.buildHits.p99}',
+                    style:
+                        const TextStyle(fontFamily: 'monospace', fontSize: 11)),
               ],
             ),
     );
@@ -1159,7 +1275,8 @@ class _ExportPanel extends StatelessWidget {
         child: ExpansionTile(
           tilePadding: const EdgeInsets.fromLTRB(16, 10, 10, 10),
           childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          title: Text('Export Snapshot · $modeLabel', style: const TextStyle(fontWeight: FontWeight.w700)),
+          title: Text('Export Snapshot · $modeLabel',
+              style: const TextStyle(fontWeight: FontWeight.w700)),
           subtitle: Text('$runs FrameTiming samples'),
           trailing: OutlinedButton.icon(
             onPressed: onCopy,
@@ -1214,11 +1331,14 @@ class _BuildCountScope extends InheritedWidget {
   final _BuildCounter counter;
 
   static _BuildCounter? maybeOf(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<_BuildCountScope>()?.counter;
+    return context
+        .dependOnInheritedWidgetOfExactType<_BuildCountScope>()
+        ?.counter;
   }
 
   @override
-  bool updateShouldNotify(_BuildCountScope oldWidget) => !identical(counter, oldWidget.counter);
+  bool updateShouldNotify(_BuildCountScope oldWidget) =>
+      !identical(counter, oldWidget.counter);
 }
 
 class _BuildProbe extends StatelessWidget {
@@ -1243,6 +1363,10 @@ class _FeedCardSA extends StatelessWidget {
     final isSimple = level == _BenchLevel.simple;
     final isStress = level == _BenchLevel.stress;
 
+    if (isStress) {
+      return const _StressCardSARef();
+    }
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: DecoratedBox(
@@ -1251,7 +1375,8 @@ class _FeedCardSA extends StatelessWidget {
           borderRadius: BorderRadius.all(Radius.circular(18)),
           border: Border.fromBorderSide(BorderSide(color: Color(0xFFE7E1D7))),
           boxShadow: [
-            BoxShadow(color: Color(0x11000000), blurRadius: 16, offset: Offset(0, 8)),
+            BoxShadow(
+                color: Color(0x11000000), blurRadius: 16, offset: Offset(0, 8)),
           ],
         ),
         child: Padding(
@@ -1299,14 +1424,20 @@ class _CardHeaderSA extends StatelessWidget {
 
     return Row(
       children: [
-        const CircleAvatar(radius: 16, backgroundColor: Color(0xFF1F3C88), child: Icon(Icons.bolt_rounded, color: Colors.white, size: 16)),
+        const CircleAvatar(
+            radius: 16,
+            backgroundColor: Color(0xFF1F3C88),
+            child: Icon(Icons.bolt_rounded, color: Colors.white, size: 16)),
         const SizedBox(width: 8),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Benchmark Node', style: TextStyle(fontWeight: FontWeight.w700)),
-              Text('screen_adapt · const-heavy · $levelLabel', style: const TextStyle(fontSize: 11, color: Color(0xFF666257))),
+              const Text('Benchmark Node',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+              Text('screen_adapt · const-heavy · $levelLabel',
+                  style:
+                      const TextStyle(fontSize: 11, color: Color(0xFF666257))),
             ],
           ),
         ),
@@ -1325,7 +1456,8 @@ class _ConstParagraph extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       'Same ${_levelItemCount(level)}-card tree, eager rebuild ${_levelRuns(level)} runs; const subtree keeps deep sections reusable.',
-      style: const TextStyle(height: 1.35, fontSize: 12, color: Color(0xFF3B372F)),
+      style:
+          const TextStyle(height: 1.35, fontSize: 12, color: Color(0xFF3B372F)),
     );
   }
 }
@@ -1357,13 +1489,18 @@ class _ConstMetricBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-      decoration: BoxDecoration(color: const Color(0xFFF4F6FA), borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(
+          color: const Color(0xFFF4F6FA),
+          borderRadius: BorderRadius.circular(10)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontSize: 10, color: Color(0xFF6B675F))),
+          Text(label,
+              style: const TextStyle(fontSize: 10, color: Color(0xFF6B675F))),
           const SizedBox(height: 4),
-          Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+          Text(value,
+              style:
+                  const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
         ],
       ),
     );
@@ -1399,8 +1536,11 @@ class _ConstTag extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: const Color(0xFFE8F0FF), borderRadius: BorderRadius.circular(999)),
-      child: Text(text, style: const TextStyle(fontSize: 10, color: Color(0xFF24538C))),
+      decoration: BoxDecoration(
+          color: const Color(0xFFE8F0FF),
+          borderRadius: BorderRadius.circular(999)),
+      child: Text(text,
+          style: const TextStyle(fontSize: 10, color: Color(0xFF24538C))),
     );
   }
 }
@@ -1414,14 +1554,16 @@ class _ConstActionRow extends StatelessWidget {
       children: [
         Icon(Icons.insights_outlined, size: 14, color: Color(0xFF666257)),
         SizedBox(width: 4),
-        Text('Observe p95/p99/max & build hits', style: TextStyle(fontSize: 11, color: Color(0xFF666257))),
+        Text('Observe p95/p99/max & build hits',
+            style: TextStyle(fontSize: 11, color: Color(0xFF666257))),
       ],
     );
   }
 }
 
 class _FeedCardSU extends StatelessWidget {
-  const _FeedCardSU({required this.tick, required this.index, required this.level});
+  const _FeedCardSU(
+      {required this.tick, required this.index, required this.level});
 
   final int tick;
   final int index;
@@ -1432,6 +1574,10 @@ class _FeedCardSU extends StatelessWidget {
     final isSimple = level == _BenchLevel.simple;
     final isStress = level == _BenchLevel.stress;
 
+    if (isStress) {
+      return _StressCardSURef(tick: tick, index: index);
+    }
+
     return Padding(
       padding: EdgeInsets.fromLTRB(16.w, 12.w, 16.w, 0),
       child: DecoratedBox(
@@ -1440,7 +1586,10 @@ class _FeedCardSU extends StatelessWidget {
           borderRadius: BorderRadius.circular(18.r),
           border: Border.all(color: const Color(0xFFE7E1D7)),
           boxShadow: [
-            BoxShadow(color: const Color(0x11000000), blurRadius: 16.r, offset: Offset(0, 8.w)),
+            BoxShadow(
+                color: const Color(0x11000000),
+                blurRadius: 16.r,
+                offset: Offset(0, 8.w)),
           ],
         ),
         child: Padding(
@@ -1450,18 +1599,25 @@ class _FeedCardSU extends StatelessWidget {
             children: [
               _BuildProbe(child: _CardHeaderSU(level: level)),
               SizedBox(height: 10.w),
-              _BuildProbe(child: _DynamicParagraph(tick: tick, index: index, level: level)),
+              _BuildProbe(
+                  child: _DynamicParagraph(
+                      tick: tick, index: index, level: level)),
               SizedBox(height: 10.w),
               _BuildProbe(child: _DynamicGridRow(tick: tick, index: index)),
               if (!isSimple) ...[
                 SizedBox(height: 10.w),
-                _BuildProbe(child: _DynamicGridRow(tick: tick + 1, index: index + 1)),
+                _BuildProbe(
+                    child: _DynamicGridRow(tick: tick + 1, index: index + 1)),
                 SizedBox(height: 10.w),
-                _BuildProbe(child: _DynamicTagWrap(tick: tick, index: index, level: level)),
+                _BuildProbe(
+                    child: _DynamicTagWrap(
+                        tick: tick, index: index, level: level)),
               ],
               if (isStress) ...[
                 SizedBox(height: 10.w),
-                _BuildProbe(child: _DynamicTagWrap(tick: tick + 2, index: index + 2, level: level)),
+                _BuildProbe(
+                    child: _DynamicTagWrap(
+                        tick: tick + 2, index: index + 2, level: level)),
               ],
               SizedBox(height: 10.w),
               _BuildProbe(child: _DynamicActionRow(tick: tick)),
@@ -1488,14 +1644,22 @@ class _CardHeaderSU extends StatelessWidget {
 
     return Row(
       children: [
-        CircleAvatar(radius: 16.w, backgroundColor: const Color(0xFFBC6C25), child: Icon(Icons.auto_graph_rounded, color: Colors.white, size: 16.sp)),
+        CircleAvatar(
+            radius: 16.w,
+            backgroundColor: const Color(0xFFBC6C25),
+            child: Icon(Icons.auto_graph_rounded,
+                color: Colors.white, size: 16.sp)),
         SizedBox(width: 8.w),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Benchmark Node', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.sp)),
-              Text('flutter_screenutil · helper-heavy · $levelLabel', style: TextStyle(fontSize: 11.sp, color: const Color(0xFF666257))),
+              Text('Benchmark Node',
+                  style:
+                      TextStyle(fontWeight: FontWeight.w700, fontSize: 13.sp)),
+              Text('flutter_screenutil · helper-heavy · $levelLabel',
+                  style: TextStyle(
+                      fontSize: 11.sp, color: const Color(0xFF666257))),
             ],
           ),
         ),
@@ -1506,7 +1670,8 @@ class _CardHeaderSU extends StatelessWidget {
 }
 
 class _DynamicParagraph extends StatelessWidget {
-  const _DynamicParagraph({required this.tick, required this.index, required this.level});
+  const _DynamicParagraph(
+      {required this.tick, required this.index, required this.level});
 
   final int tick;
   final int index;
@@ -1515,10 +1680,15 @@ class _DynamicParagraph extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final phase = (tick + index) % 3;
-    final label = phase == 0 ? 'warming' : phase == 1 ? 'sampling' : 'spiking';
+    final label = phase == 0
+        ? 'warming'
+        : phase == 1
+            ? 'sampling'
+            : 'spiking';
     return Text(
       'Same ${_levelItemCount(level)}-card tree under eager rebuild (${_levelRuns(level)} runs). Phase: $label.',
-      style: TextStyle(height: 1.35, fontSize: 12.sp, color: const Color(0xFF3B372F)),
+      style: TextStyle(
+          height: 1.35, fontSize: 12.sp, color: const Color(0xFF3B372F)),
     );
   }
 }
@@ -1534,24 +1704,41 @@ class _DynamicGridRow extends StatelessWidget {
     return Row(
       children: List.generate(3, (i) {
         final active = (tick + index + i).isEven;
-        final label = i == 0 ? 'UI' : i == 1 ? 'Tail' : 'Reuse';
-        final value = i == 0 ? 't${(tick + i) % 10}' : i == 1 ? 'p${(tick + index) % 7}' : active ? 'mid' : 'low';
+        final label = i == 0
+            ? 'UI'
+            : i == 1
+                ? 'Tail'
+                : 'Reuse';
+        final value = i == 0
+            ? 't${(tick + i) % 10}'
+            : i == 1
+                ? 'p${(tick + index) % 7}'
+                : active
+                    ? 'mid'
+                    : 'low';
         return Expanded(
           child: Padding(
             padding: EdgeInsets.only(right: i == 2 ? 0 : 8.w),
             child: Container(
               padding: EdgeInsets.fromLTRB(8.w, 8.w, 8.w, 8.w),
               decoration: BoxDecoration(
-                color: active ? const Color(0xFFFFEFD8) : const Color(0xFFF4F6FA),
+                color:
+                    active ? const Color(0xFFFFEFD8) : const Color(0xFFF4F6FA),
                 borderRadius: BorderRadius.circular(10.r),
-                border: Border.all(color: active ? const Color(0xFFFFB86A) : Colors.transparent),
+                border: Border.all(
+                    color:
+                        active ? const Color(0xFFFFB86A) : Colors.transparent),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: TextStyle(fontSize: 10.sp, color: const Color(0xFF6B675F))),
+                  Text(label,
+                      style: TextStyle(
+                          fontSize: 10.sp, color: const Color(0xFF6B675F))),
                   SizedBox(height: 4.w),
-                  Text(value, style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w700)),
+                  Text(value,
+                      style: TextStyle(
+                          fontSize: 12.sp, fontWeight: FontWeight.w700)),
                 ],
               ),
             ),
@@ -1563,7 +1750,8 @@ class _DynamicGridRow extends StatelessWidget {
 }
 
 class _DynamicTagWrap extends StatelessWidget {
-  const _DynamicTagWrap({required this.tick, required this.index, required this.level});
+  const _DynamicTagWrap(
+      {required this.tick, required this.index, required this.level});
 
   final int tick;
   final int index;
@@ -1594,8 +1782,11 @@ class _DynamicTag extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.w),
-      decoration: BoxDecoration(color: const Color(0xFFE8F0FF), borderRadius: BorderRadius.circular(999.r)),
-      child: Text(text, style: TextStyle(fontSize: 10.sp, color: const Color(0xFF24538C))),
+      decoration: BoxDecoration(
+          color: const Color(0xFFE8F0FF),
+          borderRadius: BorderRadius.circular(999.r)),
+      child: Text(text,
+          style: TextStyle(fontSize: 10.sp, color: const Color(0xFF24538C))),
     );
   }
 }
@@ -1610,10 +1801,307 @@ class _DynamicActionRow extends StatelessWidget {
     final hot = tick.isOdd;
     return Row(
       children: [
-        Icon(hot ? Icons.local_fire_department_rounded : Icons.insights_outlined, size: 14.sp, color: hot ? const Color(0xFFB3261E) : const Color(0xFF666257)),
+        Icon(
+            hot ? Icons.local_fire_department_rounded : Icons.insights_outlined,
+            size: 14.sp,
+            color: hot ? const Color(0xFFB3261E) : const Color(0xFF666257)),
         SizedBox(width: 4.w),
-        Text(hot ? 'Hot frame pressure in progress' : 'Observe p95/p99/max & build hits', style: TextStyle(fontSize: 11.sp, color: hot ? const Color(0xFFB3261E) : const Color(0xFF666257))),
+        Text(
+            hot
+                ? 'Hot frame pressure in progress'
+                : 'Observe p95/p99/max & build hits',
+            style: TextStyle(
+                fontSize: 11.sp,
+                color:
+                    hot ? const Color(0xFFB3261E) : const Color(0xFF666257))),
       ],
+    );
+  }
+}
+
+class _StressCardSARef extends StatelessWidget {
+  const _StressCardSARef();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.all(Radius.circular(20)),
+          border: Border.fromBorderSide(BorderSide(color: Color(0xFFE7E1D7))),
+          boxShadow: [
+            BoxShadow(
+                color: Color(0x11000000), blurRadius: 20, offset: Offset(0, 10))
+          ],
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _BuildProbe(child: _StressHeaderSA()),
+              SizedBox(height: 12),
+              _BuildProbe(child: _StressHeroSA()),
+              SizedBox(height: 12),
+              _BuildProbe(child: _StressInsightSA()),
+              SizedBox(height: 12),
+              _BuildProbe(child: _StressMatrixSARef()),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StressHeaderSA extends StatelessWidget {
+  const _StressHeaderSA();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      children: [
+        CircleAvatar(
+            radius: 16,
+            backgroundColor: Color(0xFF1F3C88),
+            child:
+                Icon(Icons.auto_graph_rounded, color: Colors.white, size: 16)),
+        SizedBox(width: 8),
+        Expanded(
+            child: Text('Case A / Benchmark Node · stress',
+                style: TextStyle(fontWeight: FontWeight.w700))),
+      ],
+    );
+  }
+}
+
+class _StressHeroSA extends StatelessWidget {
+  const _StressHeroSA();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 120,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+            colors: [Color(0xFF123458), Color(0xFF2E6F95)]),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      padding: const EdgeInsets.all(12),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Const Reuse Bias',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 18)),
+          SizedBox(height: 6),
+          Text('144 cards · 56 runs · eager rebuild',
+              style: TextStyle(color: Colors.white70, fontSize: 12)),
+        ],
+      ),
+    );
+  }
+}
+
+class _StressInsightSA extends StatelessWidget {
+  const _StressInsightSA();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Text(
+      'Stress reference : keep deep sections const so BuildProbe hits should remain lower across 56 runs.',
+      style: TextStyle(fontSize: 12, height: 1.35, color: Color(0xFF3B372F)),
+    );
+  }
+}
+
+class _StressMatrixSARef extends StatelessWidget {
+  const _StressMatrixSARef();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        _BuildProbe(child: _StressCellSARef(label: 'P0')),
+        _BuildProbe(child: _StressCellSARef(label: 'P1')),
+        _BuildProbe(child: _StressCellSARef(label: 'P2')),
+        _BuildProbe(child: _StressCellSARef(label: 'P3')),
+        _BuildProbe(child: _StressCellSARef(label: 'P4')),
+        _BuildProbe(child: _StressCellSARef(label: 'P5')),
+      ],
+    );
+  }
+}
+
+class _StressCellSARef extends StatelessWidget {
+  const _StressCellSARef({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 68,
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+      decoration: BoxDecoration(
+          color: const Color(0xFFF7F4EE),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE7E1D7))),
+      child: Text(label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+    );
+  }
+}
+
+class _StressCardSURef extends StatelessWidget {
+  const _StressCardSURef({required this.tick, required this.index});
+
+  final int tick;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 0),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20.r),
+          border: Border.all(color: const Color(0xFFE7E1D7)),
+          boxShadow: [
+            BoxShadow(
+                color: const Color(0x11000000),
+                blurRadius: 20.r,
+                offset: Offset(0, 10.h))
+          ],
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(14.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _BuildProbe(child: _StressHeaderSU()),
+              SizedBox(height: 12.h),
+              _BuildProbe(child: _StressHeroSU()),
+              SizedBox(height: 12.h),
+              _BuildProbe(child: _StressInsightSU()),
+              SizedBox(height: 12.h),
+              _BuildProbe(child: _StressMatrixSURef(tick: tick, index: index)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StressHeaderSU extends StatelessWidget {
+  const _StressHeaderSU();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        CircleAvatar(
+            radius: 16.w,
+            backgroundColor: const Color(0xFFBC6C25),
+            child: Icon(Icons.auto_graph_rounded,
+                color: Colors.white, size: 16.sp)),
+        SizedBox(width: 8.w),
+        Expanded(
+            child: Text('Case B / Benchmark Node · stress',
+                style:
+                    TextStyle(fontWeight: FontWeight.w700, fontSize: 13.sp))),
+      ],
+    );
+  }
+}
+
+class _StressHeroSU extends StatelessWidget {
+  const _StressHeroSU();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 120.h,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+            colors: [Color(0xFF123458), Color(0xFF2E6F95)]),
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      padding: EdgeInsets.all(12.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Sizing Helper Bias',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 18.sp)),
+          SizedBox(height: 6.h),
+          Text('144 cards · 56 runs · eager rebuild',
+              style: TextStyle(color: Colors.white70, fontSize: 12.sp)),
+        ],
+      ),
+    );
+  }
+}
+
+class _StressInsightSU extends StatelessWidget {
+  const _StressInsightSU();
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      'Stress reference style from tst.dart: dynamic helper-sized sections reactivate more deeply on each rebuild frame.',
+      style: TextStyle(
+          fontSize: 12.sp, height: 1.35, color: const Color(0xFF3B372F)),
+    );
+  }
+}
+
+class _StressMatrixSURef extends StatelessWidget {
+  const _StressMatrixSURef({required this.tick, required this.index});
+
+  final int tick;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8.w,
+      runSpacing: 8.h,
+      children: List.generate(6, (slot) {
+        final v = (tick + index + slot) % 10;
+        final active = v.isEven;
+        return _BuildProbe(
+          child: Container(
+            width: 68.w,
+            padding: EdgeInsets.fromLTRB(10.w, 8.h, 10.w, 8.h),
+            decoration: BoxDecoration(
+              color: active ? const Color(0xFFFFF1E0) : const Color(0xFFF7F4EE),
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(
+                  color: active
+                      ? const Color(0xFFFFB86A)
+                      : const Color(0xFFE7E1D7)),
+            ),
+            child: Text('P$slot t$v',
+                style: TextStyle(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w700,
+                    color: active
+                        ? const Color(0xFF8E4A00)
+                        : const Color(0xFF2E2A24))),
+          ),
+        );
+      }, growable: false),
     );
   }
 }
