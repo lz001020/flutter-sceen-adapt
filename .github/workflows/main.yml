@@ -1,0 +1,31 @@
+name: Flutter代码质量检测
+on:
+  push:       # 推送代码就触发
+    branches: [ main, master,dev_main ]
+  pull_request: # 提合并请求触发
+    branches: [ main, master,dev_main ]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      # 1.拉取你的项目代码
+      - name: 拉取源码
+        uses: actions/checkout@v4
+
+      # 2.自动安装Flutter环境
+      - name: 配置Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.24.0
+
+      # 3.拉取项目依赖
+      - name: 安装依赖
+        run: flutter pub get
+
+      # 4.执行Sonar代码扫描
+      - name: Sonar扫描代码
+        uses: SonarSource/sonarqube-scan-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
