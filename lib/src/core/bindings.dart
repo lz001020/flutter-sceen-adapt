@@ -7,6 +7,7 @@ import 'dart:ui' as ui;
 import 'dart:ui';
 
 import 'package:flutter/gestures.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
@@ -112,8 +113,8 @@ mixin DesignSizeBindingMixin on WidgetsFlutterBinding {
 
   void _handlePointerDataPacket(ui.PointerDataPacket packet) {
     try {
-      _pendingPointerEvents.addAll(
-          PointerEventConverter.expand(packet.data, _getAdaptedDevicePixelRatio));
+      _pendingPointerEvents.addAll(PointerEventConverter.expand(
+          packet.data, _getAdaptedDevicePixelRatio));
       if (!locked) {
         _flushPointerEventQueue();
       }
@@ -194,8 +195,13 @@ class DesignSizeWidgetsFlutterBinding extends WidgetsFlutterBinding
       scaleText: scaleText,
       supportSystemTextScale: supportSystemTextScale,
     );
-    if (WidgetsBinding.instance is! DesignSizeWidgetsFlutterBinding) {
+    // WidgetsBinding.instance throws before any binding has been created.
+    if (BindingBase.debugBindingType() == null) {
       DesignSizeWidgetsFlutterBinding();
+    } else if (WidgetsBinding.instance is! DesignSizeWidgetsFlutterBinding) {
+      throw FlutterError(
+        'A different WidgetsBinding is already initialized.',
+      );
     }
     return WidgetsBinding.instance;
   }
