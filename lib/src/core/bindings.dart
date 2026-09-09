@@ -62,6 +62,9 @@ mixin DesignSizeBindingMixin on WidgetsFlutterBinding {
         BoxConstraints.fromViewConstraints(view.physicalConstraints);
     final double devicePixelRatio =
         ScreenSizeUtils.instance.data.devicePixelRatio;
+    debugPrint('[screen_adapt][view_config] view=${view.viewId} '
+        'physical=${view.physicalSize} logical=${physicalConstraints / devicePixelRatio} '
+        'dpr=$devicePixelRatio scale=${ScreenSizeUtils.instance.scale}');
     return ViewConfiguration(
       physicalConstraints: physicalConstraints,
       logicalConstraints: physicalConstraints / devicePixelRatio,
@@ -113,8 +116,17 @@ mixin DesignSizeBindingMixin on WidgetsFlutterBinding {
 
   void _handlePointerDataPacket(ui.PointerDataPacket packet) {
     try {
-      _pendingPointerEvents.addAll(PointerEventConverter.expand(
-          packet.data, _getAdaptedDevicePixelRatio));
+      final events = PointerEventConverter.expand(
+          packet.data, _getAdaptedDevicePixelRatio);
+      for (final event in events) {
+        if (event is PointerDownEvent || event is PointerUpEvent) {
+          debugPrint('[screen_adapt][pointer] type=${event.runtimeType} '
+              'view=${event.viewId} position=${event.position} '
+              'local=${event.localPosition} dpr=${_getAdaptedDevicePixelRatio(event.viewId)} '
+              'scale=${ScreenSizeUtils.instance.scale}');
+        }
+        _pendingPointerEvents.add(event);
+      }
       if (!locked) {
         _flushPointerEventQueue();
       }

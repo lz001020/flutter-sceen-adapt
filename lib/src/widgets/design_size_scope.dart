@@ -20,6 +20,7 @@ class DesignSizeWidget extends StatefulWidget {
 
 class DesignSizeWidgetState extends State<DesignSizeWidget>
     with StateAble, WidgetsBindingObserver {
+  String? _lastDiagnostic;
   @override
   void initState() {
     super.initState();
@@ -71,6 +72,15 @@ class DesignSizeWidgetState extends State<DesignSizeWidget>
       paintUnscaled: inheritedAdaptScope?.paintUnscaled ?? false,
       layoutUnscaled: inheritedAdaptScope?.layoutUnscaled ?? false,
     );
+    final diagnostic = 'design=${ScreenSizeUtils.instance.designSize} '
+        'origin=${adaptScopeState.originMediaQuery.size} '
+        'adapted=${mediaQueryData.size} scale=${adaptScopeState.scale} '
+        'paintUnscaled=${adaptScopeState.paintUnscaled} '
+        'layoutUnscaled=${adaptScopeState.layoutUnscaled}';
+    if (_lastDiagnostic != diagnostic) {
+      _lastDiagnostic = diagnostic;
+      debugPrint('[screen_adapt][scope] $diagnostic');
+    }
 
     if (outerDesignSizeState == null) {
       return MediaQuery(
