@@ -20,12 +20,12 @@ class HomePage extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [
           const Text(
-            'Choose a demo',
+            'Screen Adapt 测试实验室',
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 6),
           Text(
-            'Focused pages for adaptation verification.',
+            '按场景验证布局、指针、Insets、原生视图与物理像素。每个页面都提供实时诊断信息。',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: const Color(0xFF666257),
                 ),
@@ -33,8 +33,8 @@ class HomePage extends StatelessWidget {
           const SizedBox(height: 16),
           DemoNavCard(
             icon: Icons.space_dashboard_outlined,
-            title: 'Adaptation Gallery',
-            subtitle: 'Global adaptation and runtime design-size switch.',
+            title: '基础布局与运行时尺寸',
+            subtitle: '切换设计稿尺寸，观察 scale、MediaQuery 和布局结果。',
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -46,8 +46,8 @@ class HomePage extends StatelessWidget {
           const SizedBox(height: 12),
           DemoNavCard(
             icon: Icons.crop_free_outlined,
-            title: 'UnscaledZone',
-            subtitle: 'Context / paint / layout layering and re-entry cases.',
+            title: 'UnscaledZone 局部反适配',
+            subtitle: '对比 normal、contextFallback、full 三种模式及命中区域。',
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -59,8 +59,8 @@ class HomePage extends StatelessWidget {
           const SizedBox(height: 12),
           DemoNavCard(
             icon: Icons.gesture_outlined,
-            title: 'Pointer Events',
-            subtitle: 'Pointer coordinates and hit-test validation.',
+            title: '指针与手势坐标',
+            subtitle: '记录 position、localPosition、delta 并验证边界命中。',
             onTap: () {
               Navigator.of(context).pushNamed('/pointer_demo');
             },
@@ -68,8 +68,8 @@ class HomePage extends StatelessWidget {
           const SizedBox(height: 12),
           DemoNavCard(
             icon: Icons.layers_outlined,
-            title: 'PlatformView',
-            subtitle: 'Native view size and click compensation.',
+            title: 'PlatformView 原生视图',
+            subtitle: '比较原生视图尺寸、坐标和点击传递。',
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -81,8 +81,8 @@ class HomePage extends StatelessWidget {
           const SizedBox(height: 12),
           DemoNavCard(
             icon: Icons.grid_3x3_outlined,
-            title: 'Physical Pixels',
-            subtitle: '1px drawing and physical pixel checks.',
+            title: 'PhysicalPixel 物理像素',
+            subtitle: '验证逻辑像素与物理像素映射及 1px 绘制。',
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -94,8 +94,8 @@ class HomePage extends StatelessWidget {
           const SizedBox(height: 12),
           DemoNavCard(
             icon: Icons.keyboard_outlined,
-            title: 'Keyboard & Insets',
-            subtitle: 'viewInsets and keyboard layout behavior.',
+            title: '键盘与 Insets',
+            subtitle: '观察 viewInsets、padding、viewPadding 变化。',
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -107,8 +107,8 @@ class HomePage extends StatelessWidget {
           const SizedBox(height: 12),
           DemoNavCard(
             icon: Icons.speed_outlined,
-            title: 'Benchmark',
-            subtitle: 'const optimization: screen_adapt vs flutter_screenutil.',
+            title: '性能基准',
+            subtitle: '比较适配开销并输出可重复的基准数据。',
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
