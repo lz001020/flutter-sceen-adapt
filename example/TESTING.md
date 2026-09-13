@@ -1,6 +1,6 @@
 # 精简测试实验室
 
-运行：在 example 目录执行 `flutter run`。首页包含指针、UnscaledZone、键盘与安全区、字体与系统缩放。
+运行：在 example 目录执行 `flutter run`。首页包含指针、UnscaledZone、键盘与安全区、字体与系统缩放、窗口与横竖屏。
 
 各页顶部均可切换设计宽度 320、375、768。右上角按钮重置当前页面。
 
@@ -67,3 +67,7 @@ flutter run --dart-define=SUPPORT_SYSTEM_TEXT_SCALE=true
 normal 在配置 false 时应忽略系统字体大小，true 时应跟随。full 恢复原始 MediaQuery，两种启动配置下均应跟随系统字体。
 
 日志：`adb logcat -d -s flutter | rg 'demo:text|demo:profile'`。mapping 只判断字号映射；ellipsis 表示两行容器不足，不能把字号 PASS 理解成没有截断。Android 非线性字体缩放下，若 16/28 字号出现映射差异，应保留 FAIL 证据再分析，不按统一比例自动判通过。
+
+## 窗口与横竖屏
+
+打开“窗口与横竖屏”，旋转设备到横屏再恢复竖屏，并在每次稳定后切换 320、375、768。页面只在物理尺寸、DPR、scale 有效时显示 PASS；窗口创建/旋转的零尺寸过渡会被忽略。日志：`adb logcat -d -s flutter | rg 'demo:window|demo:profile'`。
