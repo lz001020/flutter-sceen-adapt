@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:example/app/home_page.dart';
 import 'package:example/pages/input/pointer_events_page.dart';
-import 'package:example/pages/platform_view/platform_view_demo_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:screen_adapt/screen_adapt.dart';
@@ -38,7 +37,6 @@ class MyApp extends StatelessWidget {
       home: const HomePage(),
       routes: {
         '/pointer_demo': (context) => const PointerTestPage(),
-        '/platform_view_demo': (context) => const PlatformViewDemoPage(),
       },
     );
   }
