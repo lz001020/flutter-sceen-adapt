@@ -13,6 +13,8 @@
 
 PASS 仅代表几何数值符合预期，不代表点击验证完成。两种反适配模式的绘制比例均为 1/scale；full 同时改变布局占位。context 保留原占位，超出占位的绘制区域可能无法命中。
 
+交互组件推荐显式使用 `UnscaledZoneMode.full`。2026-09-13 的模拟器内外边界验证结果、context 已复现的限制和未覆盖范围见 [UnscaledZone 验证记录](../docs/unscaled-zone-validation.md)。
+
 坐标表示测量当时的位置；滚动后可点击“重新测量”获取新坐标。
 
 ## 日志与自动化
