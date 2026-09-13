@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:screen_adapt/screen_adapt.dart';
+import '../../test_lab/test_lab_diagnostics.dart';
 
 class UnscaledZoneDemoPage extends StatefulWidget {
   const UnscaledZoneDemoPage({super.key});
@@ -26,6 +27,12 @@ class _UnscaledZoneDemoPageState extends State<UnscaledZoneDemoPage> {
 
   void _handleModeMetrics(String id, _ModeBandMetrics metrics) {
     if (_modeMetrics[id] == metrics) return;
+    DemoDiagnostics.log(
+        'zone',
+        '$id mq=${metrics.mediaQueryWidth.toStringAsFixed(1)} '
+            'logical=${metrics.zoneLogicalWidth.toStringAsFixed(1)} '
+            'paint=${metrics.zonePaintWidth.toStringAsFixed(1)} '
+            'cardScale=${metrics.cardPaintScale.toStringAsFixed(3)}');
     setState(() {
       _modeMetrics[id] = metrics;
     });
@@ -33,6 +40,11 @@ class _UnscaledZoneDemoPageState extends State<UnscaledZoneDemoPage> {
 
   void _handleNestedMetrics(String id, _VisualMetrics metrics) {
     if (_nestedMetrics[id] == metrics) return;
+    DemoDiagnostics.log(
+        'zone',
+        '$id slot=${metrics.slotWidth.toStringAsFixed(1)} '
+            'paint=${metrics.paintWidth.toStringAsFixed(1)} '
+            'nextDx=${metrics.nextSiblingDx.toStringAsFixed(1)}');
     setState(() {
       _nestedMetrics[id] = metrics;
     });
@@ -40,6 +52,11 @@ class _UnscaledZoneDemoPageState extends State<UnscaledZoneDemoPage> {
 
   void _handleRowMetrics(String id, _VisualMetrics metrics) {
     if (_rowMetrics[id] == metrics) return;
+    DemoDiagnostics.log(
+        'zone',
+        '$id slot=${metrics.slotWidth.toStringAsFixed(1)} '
+            'paint=${metrics.paintWidth.toStringAsFixed(1)} '
+            'nextDx=${metrics.nextSiblingDx.toStringAsFixed(1)}');
     setState(() {
       _rowMetrics[id] = metrics;
     });
