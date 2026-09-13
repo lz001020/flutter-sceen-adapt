@@ -43,7 +43,13 @@ class TestLabShell extends StatelessWidget {
                       ? null
                       : (_) {
                           (onProfileChanged ?? onReset)();
-                          controller.setDesignSize(size);
+                          // 切换设计尺寸时保留本次启动的字体策略。
+                          utils.setDesignSize(size,
+                              type: utils.adaptType,
+                              scaleText: utils.scaleText,
+                              supportSystemTextScale:
+                                  utils.supportSystemTextScale);
+                          WidgetsBinding.instance.handleMetricsChanged();
                           DemoDiagnostics.log('profile', 'design=$size');
                         }),
           ]),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../pages/input/pointer_events_page.dart';
 import '../pages/input/keyboard_test_page.dart';
+import '../pages/text/text_scale_test_page.dart';
 import '../pages/unscaled_zone/unscaled_zone_demo_page.dart';
 
 class HomePage extends StatelessWidget {
@@ -9,6 +10,11 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: const Text('Screen Adapt 测试实验室')),
         body: ListView(children: [
+          ListTile(
+              title: const Text('字体与系统缩放'),
+              subtitle: const Text('文字尺寸、系统字体和局部反适配'),
+              onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                  builder: (_) => const TextScaleTestPage()))),
           ListTile(
               title: const Text('键盘与安全区'),
               subtitle: const Text('底部输入框、键盘遮挡与 Insets'),

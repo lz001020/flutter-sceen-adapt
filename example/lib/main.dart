@@ -10,7 +10,9 @@ void main() {
   DesignSizeWidgetsFlutterBinding.ensureInitialized(
     const Size(375, 667),
     scaleText: true,
-    supportSystemTextScale: false,
+    supportSystemTextScale: const bool.fromEnvironment(
+        'SUPPORT_SYSTEM_TEXT_SCALE',
+        defaultValue: false),
   );
   if (Platform.isAndroid) {
     SystemChrome.setSystemUIOverlayStyle(
