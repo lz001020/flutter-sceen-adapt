@@ -1,8 +1,8 @@
 # 精简测试实验室
 
-运行：在 example 目录执行 `flutter run`。首页仅保留指针与 UnscaledZone。
+运行：在 example 目录执行 `flutter run`。首页包含指针、UnscaledZone 和键盘与安全区。
 
-两页顶部均可切换设计宽度 320、375、768。右上角按钮清空当前页面的记录。
+各页顶部均可切换设计宽度 320、375、768。右上角按钮重置当前页面。
 
 ## 手动验证
 
@@ -34,3 +34,16 @@ adb logcat -d -s flutter | rg 'demo:profile|demo:pointer|demo:zone'
 仓库根目录运行 `flutter test`，覆盖缩放 0.5、1、2，布局占位、原始物理尺寸、中心/边缘/区域外点击，以及 full 嵌套和运行时切换。
 
 example 目录运行 `flutter test`，验证页面导航、独立靶点计数、拖动、重置和几何结果。Widget test 不能替代真实设备的视觉触点确认。
+
+## 键盘与安全区
+
+1. 打开“键盘与安全区”，确认底部输入框、绿线未进入系统手势区。
+2. 点击输入框，输入文字；确认输入框位于键盘上方，日志显示 `keyboard=打开 visible=true insetMatches=true`。
+3. 收起键盘，确认输入框回到底部；切换 320、375、768，重复操作。也尝试键盘打开时切换设计尺寸。
+4. 旋转设备后重复打开/收起；通过“正常”或“有遮挡”记录人工结论。
+
+用 `adb logcat -d -s flutter | rg 'demo:keyboard|demo:profile'` 读取记录。日志包含原始/适配尺寸、DPR、Insets、padding、viewPadding、输入框边界和可用底边，不记录输入的文字。
+
+`visible` 检查输入框是否位于安全区与键盘边界内；`insetMatches` 检查适配后的底部 Insets 换算为物理像素后是否与 FlutterView 一致。浮动键盘等不报告底部 Insets 的场景仍需人工确认。
+
+自动测试通过注入窗口 Insets 验证键盘开关、键盘高度变化、布局恢复和横屏安全区；不等于真实软键盘或自定义 binding 的设备验证通过。
