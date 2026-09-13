@@ -1,6 +1,6 @@
 # 精简测试实验室
 
-运行：在 example 目录执行 `flutter run`。首页包含指针、UnscaledZone 和键盘与安全区。
+运行：在 example 目录执行 `flutter run`。首页包含指针、UnscaledZone、键盘与安全区、字体与系统缩放。
 
 各页顶部均可切换设计宽度 320、375、768。右上角按钮重置当前页面。
 
@@ -47,3 +47,23 @@ example 目录运行 `flutter test`，验证页面导航、独立靶点计数、
 `visible` 检查输入框是否位于安全区与键盘边界内；`insetMatches` 检查适配后的底部 Insets 换算为物理像素后是否与 FlutterView 一致。浮动键盘等不报告底部 Insets 的场景仍需人工确认。
 
 自动测试通过注入窗口 Insets 验证键盘开关、键盘高度变化、布局恢复和横屏安全区；不等于真实软键盘或自定义 binding 的设备验证通过。
+
+已知未解决项（2026-09-13 模拟器）：横屏 320/375 下软键盘完全打开时输入框部分超出可用底边；Insets 映射通过，但可见性检查失败。此项暂缓处理，不标记为验收通过。
+
+## 字体与系统缩放
+
+在 example 目录分别启动以下配置，切换配置需停止应用后重新运行：
+
+```sh
+flutter run --dart-define=SUPPORT_SYSTEM_TEXT_SCALE=false
+flutter run --dart-define=SUPPORT_SYSTEM_TEXT_SCALE=true
+```
+
+1. 打开“字体与系统缩放”，查看 normal/full 的 16、28 字号样本。
+2. 到系统设置把字体由默认调大，返回页面；查看字号映射、实际尺寸、是否超过两行。测试结束恢复系统设置。
+3. 在 320/375/768 下重复；切换设计尺寸会保留当前字体策略。
+4. 在样本下点击“正常”或“裁切或重叠”，记录人工观察。
+
+normal 在配置 false 时应忽略系统字体大小，true 时应跟随。full 恢复原始 MediaQuery，两种启动配置下均应跟随系统字体。
+
+日志：`adb logcat -d -s flutter | rg 'demo:text|demo:profile'`。mapping 只判断字号映射；ellipsis 表示两行容器不足，不能把字号 PASS 理解成没有截断。Android 非线性字体缩放下，若 16/28 字号出现映射差异，应保留 FAIL 证据再分析，不按统一比例自动判通过。
