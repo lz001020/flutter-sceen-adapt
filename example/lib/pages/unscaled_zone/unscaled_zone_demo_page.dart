@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:screen_adapt/screen_adapt.dart';
 import '../../test_lab/test_lab_shell.dart';
 import '../../test_lab/test_lab_diagnostics.dart';
@@ -19,7 +20,7 @@ class _UnscaledZoneDemoPageState extends State<UnscaledZoneDemoPage> {
       onReset: () => setState(() => _revision++),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const Text('矩形为 80×48，红线标记下一兄弟组件。点击矩形中心和边缘，比较计数与视觉位置。'),
-        const Text('PASS 只验证几何。context 溢出布局占位的部分可能无法命中。'),
+        const Text('在灰色测试区内点击矩形或外部，都会记录日志。PASS 只验证几何；context 溢出占位的部分可能无法命中。'),
         for (final name in ['normal', 'context', 'full'])
           _ZoneCase(
               key: ValueKey('$name/$scale/$_revision'),
@@ -44,6 +45,46 @@ class _ZoneCaseState extends State<_ZoneCase> {
   String _geometry = 'WAIT：尚未测量';
   int _taps = 0;
   String _manual = '待验证';
+  final _pointers = <int, _PointerProbe>{};
+  int _sequence = 0;
+
+  String _position(Offset global) {
+    final box = _childKey.currentContext!.findRenderObject()! as RenderBox;
+    final local = box.globalToLocal(global);
+    return 'global=$global local=$local inside=${(Offset.zero & box.size).contains(local)}';
+  }
+
+  void _down(PointerDownEvent event) {
+    final probe = _PointerProbe(++_sequence, event.position, _taps);
+    if (_pointers.isNotEmpty) {
+      probe.moved = true;
+      for (final active in _pointers.values) {
+        active.moved = true;
+      }
+    }
+    _pointers[event.pointer] = probe;
+    DemoDiagnostics.log(
+        'zone',
+        'mode=${widget.name} probe=${probe.id} '
+            'down ${_position(event.position)} taps=$_taps');
+  }
+
+  void _up(PointerUpEvent event) {
+    final probe = _pointers.remove(event.pointer);
+    if (probe == null) return;
+    final position = _position(event.position);
+    // 等本次事件的子组件手势回调完成，再读取计数；不参与手势竞争。
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      DemoDiagnostics.log(
+          'zone',
+          'mode=${widget.name} probe=${probe.id} '
+              'up $position gesture=${probe.moved ? "drag-or-multi" : "tap-candidate"} '
+              'tapsBefore=${probe.taps} tapsAfter=$_taps delta=${_taps - probe.taps}');
+    });
+    WidgetsBinding.instance.scheduleFrame();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -99,21 +140,41 @@ class _ZoneCaseState extends State<_ZoneCase> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(widget.name, style: const TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        SizedBox(
-            height: 48 * (widget.scale < 1 ? 1 / widget.scale : 1) + 8,
-            child: Align(
-                alignment: Alignment.topLeft,
-                child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      target,
-                      IgnorePointer(
-                          child: Container(
-                              key: _markerKey,
-                              width: 2,
-                              height: 48,
-                              color: Colors.red)),
-                    ]))),
+        Listener(
+            key: ValueKey('probe-${widget.name}'),
+            behavior: HitTestBehavior.opaque,
+            onPointerDown: _down,
+            onPointerMove: (event) {
+              final probe = _pointers[event.pointer];
+              if (probe != null &&
+                  (event.position - probe.start).distance > kTouchSlop) {
+                probe.moved = true;
+              }
+            },
+            onPointerUp: _up,
+            onPointerCancel: (event) {
+              final probe = _pointers.remove(event.pointer);
+              DemoDiagnostics.log(
+                  'zone', 'mode=${widget.name} probe=${probe?.id} cancel');
+            },
+            child: ColoredBox(
+                color: const Color(0xFFEDEDED),
+                child: SizedBox(
+                    width: double.infinity,
+                    height: 48 * (widget.scale < 1 ? 1 / widget.scale : 1) + 32,
+                    child: Align(
+                        alignment: Alignment.topLeft,
+                        child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              target,
+                              IgnorePointer(
+                                  child: Container(
+                                      key: _markerKey,
+                                      width: 2,
+                                      height: 48,
+                                      color: Colors.red)),
+                            ]))))),
         Text(_geometry),
         TextButton(onPressed: _measure, child: const Text('重新测量')),
         Text('视觉与触点一致：$_manual'),
@@ -130,4 +191,12 @@ class _ZoneCaseState extends State<_ZoneCase> {
       ]),
     );
   }
+}
+
+class _PointerProbe {
+  _PointerProbe(this.id, this.start, this.taps);
+  final int id;
+  final Offset start;
+  final int taps;
+  bool moved = false;
 }
