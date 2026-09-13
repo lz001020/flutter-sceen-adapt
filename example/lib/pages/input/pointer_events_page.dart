@@ -1,5 +1,7 @@
 import 'package:example/widgets/demo_scaffold.dart';
 import 'package:flutter/material.dart';
+import '../../test_lab/test_lab_diagnostics.dart';
+import '../../test_lab/test_lab_shell.dart';
 
 class PointerTestPage extends StatefulWidget {
   const PointerTestPage({super.key});
@@ -11,92 +13,131 @@ class PointerTestPage extends StatefulWidget {
 class _PointerTestPageState extends State<PointerTestPage> {
   Offset? _downLocation;
   Offset? _upLocation;
+  Offset? _globalLocation;
+  Offset? _delta;
+  Size? _canvasSize;
+  Offset? _canvasOrigin;
   final List<Offset> _points = [];
   int _leftTapCount = 0;
   int _rightTapCount = 0;
 
   @override
   Widget build(BuildContext context) {
-    return DemoPageScaffold(
-      title: 'Pointer Events',
-      subtitle: '切换设计稿后在画布上点击、拖拽并点击按钮，验证全局改写 DPR 后的指针坐标和命中测试是否仍然准确。',
-      children: [
-        DemoCard(
-          title: 'Pointer Canvas',
-          subtitle: '绿色点为按下位置，蓝色点为抬起位置，红线为拖动轨迹。',
-          child: Listener(
-            onPointerDown: (event) {
-              setState(() {
-                _downLocation = event.localPosition;
-                _points
-                  ..clear()
-                  ..add(event.localPosition);
-              });
-            },
-            onPointerMove: (event) {
-              setState(() {
-                _points.add(event.localPosition);
-              });
-            },
-            onPointerUp: (event) {
-              setState(() {
-                _upLocation = event.localPosition;
-              });
-            },
-            child: Container(
-              height: 320,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE7F1FF),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: CustomPaint(
-                      painter: _PointerPainter(_points),
-                    ),
+    return TestLabShell(
+      title: '指针与手势坐标',
+      child: Column(
+        children: [
+          DemoCard(
+            title: 'Pointer Canvas',
+            subtitle: '拖动后对照全局坐标、局部坐标和 RenderBox 原点。',
+            child: LayoutBuilder(builder: (context, constraints) {
+              return Listener(
+                onPointerDown: (event) {
+                  final box = context.findRenderObject() as RenderBox?;
+                  setState(() {
+                    _downLocation = event.localPosition;
+                    _globalLocation = event.position;
+                    _delta = event.delta;
+                    _canvasSize = box?.size;
+                    _canvasOrigin = box?.localToGlobal(Offset.zero);
+                    _points
+                      ..clear()
+                      ..add(event.localPosition);
+                  });
+                },
+                onPointerMove: (event) {
+                  setState(() {
+                    _points.add(event.localPosition);
+                    _globalLocation = event.position;
+                    _delta = event.delta;
+                  });
+                  DemoDiagnostics.log('pointer',
+                      'move global=${event.position} local=${event.localPosition} delta=${event.delta}');
+                },
+                onPointerUp: (event) {
+                  setState(() {
+                    _upLocation = event.localPosition;
+                    _globalLocation = event.position;
+                    _delta = event.delta;
+                  });
+                  DemoDiagnostics.log('pointer',
+                      'up global=${event.position} local=${event.localPosition}');
+                },
+                child: Container(
+                  height: 320,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE7F1FF),
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  if (_downLocation != null)
-                    Positioned(
-                      left: 12,
-                      top: 12,
-                      child: Text(
-                        'Down: ${_downLocation!.dx.toStringAsFixed(1)}, ${_downLocation!.dy.toStringAsFixed(1)}',
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                  if (_upLocation != null)
-                    Positioned(
-                      left: 12,
-                      top: 36,
-                      child: Text(
-                        'Up: ${_upLocation!.dx.toStringAsFixed(1)}, ${_upLocation!.dy.toStringAsFixed(1)}',
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                  Align(
-                    alignment: Alignment.center,
-                    child: Wrap(
-                      spacing: 16,
-                      children: [
-                        ElevatedButton(
-                          onPressed: () => setState(() => _leftTapCount += 1),
-                          child: Text('Left $_leftTapCount'),
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: CustomPaint(
+                          painter: _PointerPainter(_points),
                         ),
-                        ElevatedButton(
-                          onPressed: () => setState(() => _rightTapCount += 1),
-                          child: Text('Right $_rightTapCount'),
+                      ),
+                      if (_downLocation != null)
+                        Positioned(
+                          left: 12,
+                          top: 12,
+                          child: Text(
+                            'Down: ${_downLocation!.dx.toStringAsFixed(1)}, ${_downLocation!.dy.toStringAsFixed(1)}',
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
                         ),
-                      ],
-                    ),
+                      if (_upLocation != null)
+                        Positioned(
+                          left: 12,
+                          top: 36,
+                          child: Text(
+                            'Up: ${_upLocation!.dx.toStringAsFixed(1)}, ${_upLocation!.dy.toStringAsFixed(1)}',
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      Align(
+                        alignment: Alignment.center,
+                        child: Wrap(
+                          spacing: 16,
+                          children: [
+                            ElevatedButton(
+                              onPressed: () =>
+                                  setState(() => _leftTapCount += 1),
+                              child: Text('Left $_leftTapCount'),
+                            ),
+                            ElevatedButton(
+                              onPressed: () =>
+                                  setState(() => _rightTapCount += 1),
+                              child: Text('Right $_rightTapCount'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
+                ),
+              );
+            }),
           ),
-        ),
-      ],
+          const SizedBox(height: 12),
+          DemoCard(
+            title: '实时诊断',
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('canvas size: ${_canvasSize ?? '-'}'),
+              Text('canvas origin: ${_canvasOrigin ?? '-'}'),
+              Text('global: ${_globalLocation ?? '-'}'),
+              Text('local down: ${_downLocation ?? '-'}'),
+              Text('local up: ${_upLocation ?? '-'}'),
+              Text('delta: ${_delta ?? '-'}'),
+              const SizedBox(height: 8),
+              Text((_leftTapCount + _rightTapCount > 0)
+                  ? 'PASS  按钮命中正常'
+                  : 'WAIT  请点击按钮验证命中'),
+            ]),
+          ),
+        ],
+      ),
     );
   }
 }
