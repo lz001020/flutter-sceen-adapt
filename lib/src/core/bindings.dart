@@ -57,6 +57,11 @@ mixin DesignSizeBindingMixin on WidgetsFlutterBinding {
   @override
   ViewConfiguration createViewConfigurationFor(RenderView renderView) {
     var view = renderView.flutterView;
+    if (view.physicalSize.isEmpty ||
+        !view.devicePixelRatio.isFinite ||
+        view.devicePixelRatio <= 0) {
+      return renderView.configuration;
+    }
     ScreenSizeUtils.instance.setup();
     final BoxConstraints physicalConstraints =
         BoxConstraints.fromViewConstraints(view.physicalConstraints);

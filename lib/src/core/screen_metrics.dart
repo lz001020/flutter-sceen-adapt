@@ -122,8 +122,13 @@ class ScreenSizeUtils {
   setup() {
     _isDesktop = _detectDesktopPlatform();
     final view = _currentViewOrNull();
-    if (view == null) {
-      _resetToFallbackMetrics();
+    // Flutter 在窗口创建、销毁或旋转过渡期间可能短暂报告 0 尺寸/0 DPR。
+    // 此时保留上一份有效指标，避免后续除法产生 NaN。
+    if (view == null ||
+        view.physicalSize.isEmpty ||
+        !view.devicePixelRatio.isFinite ||
+        view.devicePixelRatio <= 0) {
+      if (view == null) _resetToFallbackMetrics();
       return;
     }
 
