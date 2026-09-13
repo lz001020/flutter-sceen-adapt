@@ -7,10 +7,14 @@ class TestLabShell extends StatelessWidget {
       {super.key,
       required this.title,
       required this.child,
-      required this.onReset});
+      required this.onReset,
+      this.onProfileChanged,
+      this.bottomPanel});
   final String title;
   final Widget child;
   final VoidCallback onReset;
+  final VoidCallback? onProfileChanged;
+  final Widget? bottomPanel;
   @override
   Widget build(BuildContext context) {
     final utils = ScreenSizeUtils.instance;
@@ -22,29 +26,38 @@ class TestLabShell extends StatelessWidget {
             onPressed: onReset,
             icon: const Icon(Icons.refresh)),
       ]),
-      body: ListView(padding: const EdgeInsets.all(16), children: [
-        Wrap(spacing: 8, children: [
-          for (final size in const [
-            Size(320, 568),
-            Size(375, 667),
-            Size(768, 1024)
-          ])
-            ChoiceChip(
-                label: Text('${size.width.toInt()}'),
-                selected: utils.designSize == size,
-                onSelected: controller == null
-                    ? null
-                    : (_) {
-                        onReset();
-                        controller.setDesignSize(size);
-                        DemoDiagnostics.log('profile', 'design=$size');
-                      }),
-        ]),
-        Text(
-            'scale=${utils.scale.toStringAsFixed(3)}  DPR=${MediaQuery.devicePixelRatioOf(context).toStringAsFixed(3)}'),
-        const SizedBox(height: 16),
-        child,
-      ]),
+      body: SafeArea(
+          child: Column(children: [
+        Expanded(
+            child: ListView(padding: const EdgeInsets.all(16), children: [
+          Wrap(spacing: 8, children: [
+            for (final size in const [
+              Size(320, 568),
+              Size(375, 667),
+              Size(768, 1024)
+            ])
+              ChoiceChip(
+                  label: Text('${size.width.toInt()}'),
+                  selected: utils.designSize == size,
+                  onSelected: controller == null
+                      ? null
+                      : (_) {
+                          (onProfileChanged ?? onReset)();
+                          controller.setDesignSize(size);
+                          DemoDiagnostics.log('profile', 'design=$size');
+                        }),
+          ]),
+          Text(
+              'scale=${utils.scale.toStringAsFixed(3)}  DPR=${MediaQuery.devicePixelRatioOf(context).toStringAsFixed(3)}'),
+          const SizedBox(height: 16),
+          child,
+        ])),
+        if (bottomPanel != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: bottomPanel!,
+          ),
+      ])),
     );
   }
 }
