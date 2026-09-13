@@ -65,11 +65,7 @@ class UnscaledZone extends StatelessWidget {
 
     if (needsPaintUnscale) {
       result = _PaintUnscale(
-        // contextFallback 保留父布局槽位，子树已经按当前约束完成布局，
-        // 此时只能把绘制缩回原始坐标；full 则与 layout 回退配套放大。
-        scale: mode == UnscaledZoneMode.contextFallback
-            ? 1.0 / scope.scale
-            : scope.scale,
+        scale: scope.scale,
         child: result,
       );
     }
@@ -263,6 +259,13 @@ class _RenderLayoutUnscale extends RenderProxyBox {
   }
 
   double _reportedIntrinsic(double value) => value / scale;
+
+  @override
+  bool hitTest(BoxHitTestResult result, {required Offset position}) {
+    // 外层 _PaintUnscale 已按父坐标检查占位，并把位置转换成子坐标。
+    // 本层 size 仍是父坐标，不能用它再次裁掉已经转换的位置。
+    return hitTestChildren(result, position: position);
+  }
 
   @override
   double computeMinIntrinsicWidth(double height) {
