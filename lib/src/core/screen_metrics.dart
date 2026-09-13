@@ -178,14 +178,13 @@ extension MediaQueryDataExtension on MediaQueryData {
   MediaQueryData design() {
     final scale = ScreenSizeUtils.instance.scale;
 
-    double fontScaleFactor = 1.0;
-
-    if (ScreenSizeUtils.instance.supportSystemTextScale) {
-      fontScaleFactor = textScaler.scale(1);
-    }
-
-    if (!ScreenSizeUtils.instance.scaleText) {
-      fontScaleFactor = fontScaleFactor / scale;
+    final utils = ScreenSizeUtils.instance;
+    // 保留系统 TextScaler 的非线性曲线。只读取 scale(1) 再构造线性
+    // TextScaler 会让大字号被错误放大（例如 28 -> 36.4）。
+    TextScaler adaptedTextScaler =
+        utils.supportSystemTextScale ? textScaler : TextScaler.noScaling;
+    if (!utils.scaleText && scale != ScreenSizeUtils.defaultScale) {
+      adaptedTextScaler = _DividedTextScaler(adaptedTextScaler, scale);
     }
 
     return copyWith(
@@ -194,7 +193,45 @@ extension MediaQueryDataExtension on MediaQueryData {
       viewInsets: viewInsets / scale,
       viewPadding: viewPadding / scale,
       padding: padding / scale,
-      textScaler: TextScaler.linear(fontScaleFactor),
+      textScaler: adaptedTextScaler,
     );
   }
+}
+
+/// 将文字缩放结果按 UI scale 调整，同时保留底层 scaler 的非线性行为。
+class _DividedTextScaler implements TextScaler {
+  const _DividedTextScaler(this.delegate, this.divisor);
+
+  final TextScaler delegate;
+  final double divisor;
+
+  @override
+  double get textScaleFactor => delegate.textScaleFactor / divisor;
+
+  @override
+  double scale(double fontSize) => delegate.scale(fontSize) / divisor;
+
+  @override
+  TextScaler clamp(
+      {double minScaleFactor = 0, double maxScaleFactor = double.infinity}) {
+    return _DividedTextScaler(
+      delegate.clamp(
+        minScaleFactor: minScaleFactor * divisor,
+        maxScaleFactor: maxScaleFactor * divisor,
+      ),
+      divisor,
+    );
+  }
+
+  @override
+  String toString() => '$delegate / $divisor';
+
+  @override
+  bool operator ==(Object other) =>
+      other is _DividedTextScaler &&
+      other.delegate == delegate &&
+      other.divisor == divisor;
+
+  @override
+  int get hashCode => Object.hash(delegate, divisor);
 }
