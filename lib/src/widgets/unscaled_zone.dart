@@ -48,8 +48,8 @@ class UnscaledZone extends StatelessWidget {
     }
 
     final currentMediaQuery = MediaQuery.maybeOf(context);
-    final needsContextRestore =
-        currentMediaQuery == null || currentMediaQuery != scope.originMediaQuery;
+    final needsContextRestore = currentMediaQuery == null ||
+        currentMediaQuery != scope.originMediaQuery;
     final needsPaintUnscale = !scope.paintUnscaled;
     final needsLayoutUnscale =
         mode == UnscaledZoneMode.full && !scope.layoutUnscaled;
@@ -65,7 +65,11 @@ class UnscaledZone extends StatelessWidget {
 
     if (needsPaintUnscale) {
       result = _PaintUnscale(
-        scale: scope.scale,
+        // contextFallback 保留父布局槽位，子树已经按当前约束完成布局，
+        // 此时只能把绘制缩回原始坐标；full 则与 layout 回退配套放大。
+        scale: mode == UnscaledZoneMode.contextFallback
+            ? 1.0 / scope.scale
+            : scope.scale,
         child: result,
       );
     }
@@ -104,7 +108,8 @@ AdaptScopeState? _resolveAdaptScope(BuildContext context) {
     return null;
   }
 
-  final adapted = utils.data == const MediaQueryData() ? origin.design() : utils.data;
+  final adapted =
+      utils.data == const MediaQueryData() ? origin.design() : utils.data;
   return AdaptScopeState(
     scale: utils.scale,
     originMediaQuery: origin,
