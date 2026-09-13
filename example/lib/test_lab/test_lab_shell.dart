@@ -1,42 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:screen_adapt/screen_adapt.dart';
-import '../widgets/demo_scaffold.dart';
 import 'test_lab_diagnostics.dart';
 
-/// 测试实验室页面壳层：统一展示环境、设计尺寸和实时诊断信息。
 class TestLabShell extends StatelessWidget {
-  const TestLabShell({super.key, required this.title, required this.child});
+  const TestLabShell(
+      {super.key,
+      required this.title,
+      required this.child,
+      required this.onReset});
   final String title;
   final Widget child;
-
+  final VoidCallback onReset;
   @override
   Widget build(BuildContext context) {
-    final mq = MediaQuery.of(context);
     final utils = ScreenSizeUtils.instance;
-    DemoDiagnostics.log('shell', '$title ${DemoDiagnostics.snapshot(context)}');
+    final controller = DesignSize.maybeOf(context);
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          DemoCard(
-            title: '测试环境',
-            subtitle: '所有页面均以同一组环境指标判定结果。',
-            child: Wrap(spacing: 8, runSpacing: 8, children: [
-              _pill('Design', formatSize(utils.designSize)),
-              _pill('Scale', utils.scale.toStringAsFixed(3)),
-              _pill('Logical', formatSize(mq.size)),
-              _pill('DPR', mq.devicePixelRatio.toStringAsFixed(2)),
-              _pill('Insets', formatInsets(mq.viewInsets)),
-            ]),
-          ),
-          const SizedBox(height: 12),
-          child,
-        ],
-      ),
+      appBar: AppBar(title: Text(title), actions: [
+        IconButton(
+            tooltip: '重置记录',
+            onPressed: onReset,
+            icon: const Icon(Icons.refresh)),
+      ]),
+      body: ListView(padding: const EdgeInsets.all(16), children: [
+        Wrap(spacing: 8, children: [
+          for (final size in const [
+            Size(320, 568),
+            Size(375, 667),
+            Size(768, 1024)
+          ])
+            ChoiceChip(
+                label: Text('${size.width.toInt()}'),
+                selected: utils.designSize == size,
+                onSelected: controller == null
+                    ? null
+                    : (_) {
+                        onReset();
+                        controller.setDesignSize(size);
+                        DemoDiagnostics.log('profile', 'design=$size');
+                      }),
+        ]),
+        Text(
+            'scale=${utils.scale.toStringAsFixed(3)}  DPR=${MediaQuery.devicePixelRatioOf(context).toStringAsFixed(3)}'),
+        const SizedBox(height: 16),
+        child,
+      ]),
     );
   }
-
-  Widget _pill(String label, String value) =>
-      Chip(label: Text('$label  $value'));
 }
