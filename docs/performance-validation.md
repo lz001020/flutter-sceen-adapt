@@ -26,8 +26,8 @@ PERF_SKIP_BUILD=1 ./tool/run_android_performance.sh emulator-5554
 
 报告生成在：
 
-- `build/performance/flutter_frames.txt`
-- `build/performance/android_gfxinfo.txt`
+- `build/performance/<device-id>_flutter_frames.txt`
+- `build/performance/<device-id>_android_gfxinfo.txt`
 
 隐藏路由 `/performance_demo` 会在每次手势结束后轮换 320、375、768 设计尺寸，并每 60 帧输出一次 Flutter `FrameTiming` 的 p50、p90、p99 和超过 16.667ms 的帧数。
 如果首次启动弹窗阻止手势，或未采集到足够帧数，脚本会以非零状态退出，不生成“通过”结论。
@@ -61,3 +61,15 @@ adb -s emulator-5554 shell dumpsys gfxinfo com.example.example
 - 微基准覆盖 MediaQuery 指标适配的热路径
 - 尚未对 90/120Hz 真机、复杂列表和多指高频输入建立固定基线
 - 性能数据只能在相同设备和 Profile 模式下横向比较，不能用 Debug 模式结论代表发布性能
+
+## 复杂列表对比
+
+在同一台设备上自动构建并比较 `screen_adapt` 与 `flutter_screenutil`：
+
+```bash
+./tool/compare_list_performance.sh 8e3b2e1c
+```
+
+两个独立入口分别使用自定义 Binding 和标准 Binding，避免两套适配逻辑互相影响。两边统一按设计稿宽度缩放，渲染相同的 1000 项复杂列表；每项包含固定高度布局、图标、两段文本、三个状态标签、边框与圆角。脚本分别执行 30 次纵向滑动，输出累计帧数、p90、p99 和超过 16.667ms 的帧数。
+
+报告保存在 `build/performance/<device-id>_<engine>_complex_list.txt`。对比必须使用同一设备、刷新率、温度和 Profile 模式；单次差异不能作为稳定结论，建议至少运行三轮并取中位数。
