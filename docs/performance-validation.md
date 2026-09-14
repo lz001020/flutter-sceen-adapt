@@ -12,19 +12,42 @@ flutter test -r expanded test/performance_test.dart
 
 ## 真机帧性能
 
-使用 Profile 模式运行示例：
+Android 可执行一条命令完成 Profile 构建、安装、启动、30 次真实 swipe、设计尺寸轮换和报告采集：
 
 ```bash
-flutter run --profile -d emulator-5554
+./tool/run_android_performance.sh emulator-5554
 ```
 
-在示例中连续进入指针页面并拖动 10 秒，然后使用 Flutter DevTools 的 Performance 面板观察：
+重复测试且 Profile APK 未变化时，可以跳过构建：
+
+```bash
+PERF_SKIP_BUILD=1 ./tool/run_android_performance.sh emulator-5554
+```
+
+报告生成在：
+
+- `build/performance/flutter_frames.txt`
+- `build/performance/android_gfxinfo.txt`
+
+隐藏路由 `/performance_demo` 会在每次手势结束后轮换 320、375、768 设计尺寸，并每 60 帧输出一次 Flutter `FrameTiming` 的 p50、p90、p99 和超过 16.667ms 的帧数。
+如果首次启动弹窗阻止手势，或未采集到足够帧数，脚本会以非零状态退出，不生成“通过”结论。
+
+默认通过条件是累计 p90 不超过 16.667ms，且超过 16.667ms 的帧数不超过 5%。阈值可用于不同刷新率或 CI 基线：
+
+```bash
+PERF_MAX_P90_US=8333 PERF_MAX_JANK_PERCENT=3 \
+  ./tool/run_android_performance.sh emulator-5554
+```
+
+某些 Android 版本的 `gfxinfo` 不统计 Flutter `SurfaceView`，会显示总帧数为 0 和无意义的 4950ms 分位数。脚本会自动忽略该结果，以应用内 `FrameTiming` 为准。
+
+需要进一步定位长帧时，再使用 Flutter DevTools 的 Performance 面板观察：
 
 - UI / Raster 帧耗时是否持续低于设备刷新周期
 - 是否出现连续丢帧或 Raster 峰值
 - 旋转、键盘弹出和设计稿切换时是否出现异常长帧
 
-也可以导出 Android 图形统计：
+脚本内部等价执行以下 Android 图形统计命令：
 
 ```bash
 adb -s emulator-5554 shell dumpsys gfxinfo com.example.example reset

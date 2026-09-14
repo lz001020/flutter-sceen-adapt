@@ -21,7 +21,11 @@
 
 ## 仍待处理
 
-### 1. `onPointerDataPacket` 接管方式存在冲突风险
+### 1. Android 16 KB page size 打包对齐
+
+当前 example 的 Profile APK 在 Android 37 模拟器上会提示部分原生库未按 16 KB 对齐。该问题来自 example 使用的旧 Gradle / Android Gradle Plugin 打包链，发布前需要升级并重新验证 APK 对齐。
+
+### 2. `onPointerDataPacket` 接管方式存在冲突风险
 
 当前方案会直接接管 `PlatformDispatcher.instance.onPointerDataPacket`。
 
@@ -45,7 +49,7 @@ rg "onPointerDataPacket\\s*=" .
 
 如果插件在适配 binding 初始化之后直接赋值，必须调整初始化顺序，或让插件提供 binding mixin / 链式回调；单靠 `screen_adapt` 无法同时保留两个直接赋值的回调。
 
-### 2. 高刷设备上的指针重采样仍需真机验证
+### 3. 高刷设备上的指针重采样仍需真机验证
 
 当前方案在 binding 层处理指针包，有可能绕开 Flutter 某些内部重采样路径。
 
@@ -53,7 +57,7 @@ rg "onPointerDataPacket\\s*=" .
 
 - 90Hz / 120Hz 设备上的拖拽顺滑度需要继续验证
 
-### 3. `handleMetricsChanged()` 存在重复计算
+### 4. `handleMetricsChanged()` 存在重复计算
 
 当前某些路径里会多次调用 `ScreenSizeUtils.setup()`。
 
@@ -61,11 +65,11 @@ rg "onPointerDataPacket\\s*=" .
 
 - 通常不致错，但存在不必要的重复计算
 
-### 4. 横屏设计稿仍建议真机验证
+### 5. 横屏设计稿仍建议真机验证
 
 当前实现会根据横竖屏对宽高参与计算的方式做调整，但“设备横屏”和“设计稿本身横屏”的组合场景仍建议单独验证。
 
-### 5. 手动嵌套 `DesignSizeWidget` 仍可能引入双重缩放
+### 6. 手动嵌套 `DesignSizeWidget` 仍可能引入双重缩放
 
 当前实现已经尽量降低嵌套冲突，但如果用户在已经启用 binding 的应用里再次手动套用 `DesignSizeWidget`，仍有可能在已适配的 `MediaQueryData` 基础上再次执行 `.design()`。
 
