@@ -60,7 +60,15 @@ mixin DesignSizeBindingMixin on WidgetsFlutterBinding {
     if (view.physicalSize.isEmpty ||
         !view.devicePixelRatio.isFinite ||
         view.devicePixelRatio <= 0) {
-      return renderView.configuration;
+      final previousDpr = ScreenSizeUtils.instance.data.devicePixelRatio;
+      final fallbackDpr = previousDpr.isFinite && previousDpr > 0
+          ? previousDpr
+          : ScreenSizeUtils.defaultScale;
+      return ViewConfiguration(
+        physicalConstraints: BoxConstraints.tight(Size.zero),
+        logicalConstraints: BoxConstraints.tight(Size.zero),
+        devicePixelRatio: fallbackDpr,
+      );
     }
     ScreenSizeUtils.instance.setup();
     final BoxConstraints physicalConstraints =
