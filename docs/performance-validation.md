@@ -86,6 +86,7 @@ adb -s emulator-5554 shell dumpsys gfxinfo com.example.example
 
 - `screen_adapt` 返回同一个 const 列表子树，尺寸直接使用设计稿常量
 - `flutter_screenutil` 模拟业务内联 `.w/.sp`，父级重建时重新创建动态尺寸子树
+- 页面顶部的红色标记持续左右移动，用于肉眼确认逐帧重建正在运行
 - 分别记录 build、raster 和 total 的 p90
 
 2026-09-14 在真机 `23127PN0CC` 上的首轮结果：

@@ -101,7 +101,24 @@ class _RebuildBenchmarkPageState extends State<_RebuildBenchmarkPage>
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: Text('Rebuild - ${widget.engine}')),
-        body: widget.contentBuilder(),
+        body: Stack(
+          children: [
+            widget.contentBuilder(),
+            IgnorePointer(
+              child: Align(
+                alignment: Alignment(
+                  -1 + _controller.value * 2,
+                  -0.98,
+                ),
+                child: const SizedBox(
+                  width: 48,
+                  height: 8,
+                  child: ColoredBox(color: Colors.red),
+                ),
+              ),
+            ),
+          ],
+        ),
       );
 }
 
