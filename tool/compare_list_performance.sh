@@ -9,6 +9,10 @@ package_name="com.example.example"
 component_name="$package_name/$package_name.MainActivity"
 report_dir="$repo_dir/build/performance"
 apk_path="$example_dir/build/app/outputs/flutter-apk/app-profile.apk"
+scroll_count="${PERF_SCROLL_COUNT:-30}"
+scroll_duration_ms="${PERF_SCROLL_DURATION_MS:-250}"
+scroll_pause_seconds="${PERF_SCROLL_PAUSE_SECONDS:-0}"
+report_label="${PERF_REPORT_LABEL:-complex_list}"
 
 if ! adb -s "$device_id" get-state >/dev/null 2>&1; then
   print -u2 "设备不可用: $device_id"
@@ -29,11 +33,13 @@ typeset -A result_p90
 typeset -A result_p99
 typeset -A result_frames
 typeset -A result_janky
+typeset -A result_build
+typeset -A result_raster
 
 run_case() {
   local engine="$1"
   local target="$2"
-  local report="$report_dir/${device_id}_${engine}_complex_list.txt"
+  local report="$report_dir/${device_id}_${engine}_${report_label}.txt"
 
   (
     cd "$example_dir"
@@ -45,13 +51,17 @@ run_case() {
   adb -s "$device_id" shell am start -n "$component_name" >/dev/null
   sleep 4
 
-  for index in {1..30}; do
-    if (( index <= 20 )); then
+  local forward_count=$((scroll_count * 2 / 3))
+  for ((index = 1; index <= scroll_count; index++)); do
+    if (( index <= forward_count )); then
       adb -s "$device_id" shell input swipe \
-        "$drag_x" "$bottom_y" "$drag_x" "$top_y" 250
+        "$drag_x" "$bottom_y" "$drag_x" "$top_y" "$scroll_duration_ms"
     else
       adb -s "$device_id" shell input swipe \
-        "$drag_x" "$top_y" "$drag_x" "$bottom_y" 250
+        "$drag_x" "$top_y" "$drag_x" "$bottom_y" "$scroll_duration_ms"
+    fi
+    if [[ "$scroll_pause_seconds" != "0" ]]; then
+      sleep "$scroll_pause_seconds"
     fi
   done
   sleep 2
@@ -74,17 +84,20 @@ run_case() {
   result_p90[$engine]="$(print -r -- "$summary" | sed -E 's/.*p90=([0-9]+)us.*/\1/')"
   result_p99[$engine]="$(print -r -- "$summary" | sed -E 's/.*p99=([0-9]+)us.*/\1/')"
   result_janky[$engine]="$(print -r -- "$summary" | sed -E 's/.*janky16ms=([0-9]+).*/\1/')"
+  result_build[$engine]="$(print -r -- "$summary" | sed -E 's/.*buildP90=([0-9]+)us.*/\1/')"
+  result_raster[$engine]="$(print -r -- "$summary" | sed -E 's/.*rasterP90=([0-9]+)us.*/\1/')"
   print "$engine 完成: frames=${result_frames[$engine]} "
-  print "  p90=${result_p90[$engine]}us p99=${result_p99[$engine]}us janky=${result_janky[$engine]}"
+  print "  totalP90=${result_p90[$engine]}us p99=${result_p99[$engine]}us "
+  print "  buildP90=${result_build[$engine]}us rasterP90=${result_raster[$engine]}us janky=${result_janky[$engine]}"
 }
 
 run_case screen_adapt lib/performance/screen_adapt_list_main.dart
 run_case flutter_screenutil lib/performance/screenutil_list_main.dart
 
 print ""
-print "复杂列表性能对比 ($device_id / $resolution)"
-print "screen_adapt:       frames=${result_frames[screen_adapt]} p90=${result_p90[screen_adapt]}us p99=${result_p99[screen_adapt]}us janky=${result_janky[screen_adapt]}"
-print "flutter_screenutil: frames=${result_frames[flutter_screenutil]} p90=${result_p90[flutter_screenutil]}us p99=${result_p99[flutter_screenutil]}us janky=${result_janky[flutter_screenutil]}"
+print "复杂列表性能对比 ($device_id / $resolution / ${scroll_duration_ms}ms x $scroll_count)"
+print "screen_adapt:       frames=${result_frames[screen_adapt]} totalP90=${result_p90[screen_adapt]}us buildP90=${result_build[screen_adapt]}us rasterP90=${result_raster[screen_adapt]}us p99=${result_p99[screen_adapt]}us janky=${result_janky[screen_adapt]}"
+print "flutter_screenutil: frames=${result_frames[flutter_screenutil]} totalP90=${result_p90[flutter_screenutil]}us buildP90=${result_build[flutter_screenutil]}us rasterP90=${result_raster[flutter_screenutil]}us p99=${result_p99[flutter_screenutil]}us janky=${result_janky[flutter_screenutil]}"
 
 if (( result_p90[screen_adapt] < result_p90[flutter_screenutil] )); then
   print "p90: screen_adapt 更低"
