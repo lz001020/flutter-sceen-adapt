@@ -74,6 +74,25 @@ adb -s emulator-5554 shell dumpsys gfxinfo com.example.example
 
 报告保存在 `build/performance/<device-id>_<engine>_complex_list.txt`。对比必须使用同一设备、刷新率、温度和 Profile 模式；单次差异不能作为稳定结论，建议至少运行三轮并取中位数。
 
+### 快速滚动
+
+普通对照使用 30 次 250ms 滑动。快速列表对照使用 50 次 60ms fling，并在手势之间保留短暂惯性滚动时间：
+
+```bash
+./tool/compare_fast_list_performance.sh 8e3b2e1c
+```
+
+该测试更关注快速创建列表项时的 build、layout 和 raster 压力，报告保存在 `build/performance/<device-id>_<engine>_fast_complex_list.txt`。快速滚动与 const 高频重建回答的是不同问题，两者结果应分别记录。
+
+2026-09-14 在真机 `23127PN0CC` 上的首轮快速滚动结果：
+
+| 实现 | 帧数 | build p90 | raster p90 | total p90 | p99 | >16.667ms |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| screen_adapt | 1448 | 2.322ms | 2.838ms | 6.119ms | 7.055ms | 2 |
+| flutter_screenutil | 1570 | 2.249ms | 2.857ms | 6.051ms | 7.062ms | 1 |
+
+首轮中两者处于同一量级，ScreenUtil 的 build / total p90 略低，差异约 1%–3%。快速滚动主要触发新 item 的首次 mount/build，const 无法跳过首次构建，所以不应期待出现高频重建测试中的 const 优势。两边采样帧数存在约 8% 差异，本轮只作为基线，至少重复三轮并取中位数后再判断稳定趋势。
+
 ## const 高频重建对比
 
 复杂列表滚动主要包含新 item 的首次构建、布局和绘制，无法充分体现 const 子树在父级重建时的短路优势。使用以下命令运行逐帧重建压力测试：
