@@ -5,3 +5,6 @@ build/
 example/.dart_tool/
 example/build/
 example/.idea/
+docs/
+.ai/
+example/img*.png
