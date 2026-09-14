@@ -32,6 +32,13 @@
 建议：
 
 - 先用示例页验证当前机器上的点击和拖拽行为
+- 扫描依赖或业务代码是否直接赋值 `PlatformDispatcher.instance.onPointerDataPacket`
+- 运行 `flutter test test/binding_callback_chain_test.dart test/binding_callback_overwrite_test.dart`
+
+判定标准：
+
+- 初始化前已注册的回调仍被调用，说明回调链保留
+- 初始化后重新赋值的回调会覆盖适配逻辑，这是 Flutter 单回调属性的限制
 
 参考：
 

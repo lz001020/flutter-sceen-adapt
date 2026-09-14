@@ -29,10 +29,21 @@
 
 - 如果其他插件也覆盖这个回调，后设置的一方会覆盖前者
 
-建议：
+当前验证：
 
-- 缓存原始回调
-- 改成链式调用
+- `test/binding_callback_chain_test.dart` 验证适配 binding 初始化前注册的回调仍会执行
+- `test/binding_callback_overwrite_test.dart` 模拟插件在初始化后覆盖回调，并确认 Flutter 的单回调槽位会绕过适配逻辑
+- `rg "onPointerDataPacket\\s*=" .` 可扫描仓库内是否存在其他直接赋值
+
+接入新插件后，先运行：
+
+```bash
+flutter test test/binding_callback_chain_test.dart
+flutter test test/binding_callback_overwrite_test.dart
+rg "onPointerDataPacket\\s*=" .
+```
+
+如果插件在适配 binding 初始化之后直接赋值，必须调整初始化顺序，或让插件提供 binding mixin / 链式回调；单靠 `screen_adapt` 无法同时保留两个直接赋值的回调。
 
 ### 2. 高刷设备上的指针重采样仍需真机验证
 
