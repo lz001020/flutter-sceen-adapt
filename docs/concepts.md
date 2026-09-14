@@ -1,6 +1,8 @@
 # `screen_adapt` 设计与原理
 
-如果你还不清楚整套文档怎么分工，先看 [文档导航](../../docs/README.md)。
+本文档和当前实现以 Android / iOS 移动端单窗口为目标。Flutter Web、桌面端以及多窗口 / 多 view 不属于当前支持范围。
+
+其他文档见 [文档导航](README.md)。
 
 本文档解释的是：
 
@@ -281,17 +283,12 @@
 
 ## 11. 从实现到 demo 的映射
 
-- 全局适配： [example/lib/pages/adaptation/adaptation_gallery_page.dart](../../example/lib/pages/adaptation/adaptation_gallery_page.dart)
+- 全局适配： [example/lib/main.dart](../example/lib/main.dart)
 - `UnscaledZone` 两种模式、嵌套、row sibling 影响、重进适配态：
   [example/lib/pages/unscaled_zone/unscaled_zone_demo_page.dart](../../example/lib/pages/unscaled_zone/unscaled_zone_demo_page.dart)
 - 指针坐标修正：
   [example/lib/pages/input/pointer_events_page.dart](../../example/lib/pages/input/pointer_events_page.dart)
-- 原生视图补偿：
-  [example/lib/pages/platform_view/platform_view_demo_page.dart](../../example/lib/pages/platform_view/platform_view_demo_page.dart)
-- 物理像素语义：
-  [example/lib/pages/graphics/physical_pixel_demo_page.dart](../../example/lib/pages/graphics/physical_pixel_demo_page.dart)
-- 键盘与 `MediaQuery/viewInsets`：
-  [example/lib/pages/input/keyboard_media_query_page.dart](../../example/lib/pages/input/keyboard_media_query_page.dart)
+其他能力请直接参考 [usage.md](usage.md) 中对应 API 小节。
 
 ## 12. 一句话总结
 

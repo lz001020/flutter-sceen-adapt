@@ -1,6 +1,8 @@
 # `screen_adapt` 排查指南
 
-如果你还不清楚整套文档怎么分工，先看 [文档导航](../../docs/README.md)。
+本文档针对 Android / iOS 移动端单窗口应用。Flutter Web、桌面端和多窗口 / 多 view 暂不支持，相关现象不作为当前版本的兼容目标。
+
+其他文档见 [文档导航](README.md)。
 
 本文档按“现象 -> 优先检查项”的方式组织。
 
@@ -18,7 +20,7 @@
 
 参考：
 
-- [example/lib/pages/adaptation/adaptation_gallery_page.dart](../../example/lib/pages/adaptation/adaptation_gallery_page.dart)
+- [example/lib/app/home_page.dart](../example/lib/app/home_page.dart)
 
 ## 2. 点击位置偏移 / 拖拽轨迹不对
 
@@ -114,7 +116,7 @@
 
 参考：
 
-- [example/lib/pages/platform_view/platform_view_demo_page.dart](../../example/lib/pages/platform_view/platform_view_demo_page.dart)
+- API 说明见 [usage.md](usage.md) 中的 `AdaptedPlatformView` 小节
 
 ## 9. 键盘弹出后输入区被遮挡
 
@@ -126,7 +128,7 @@
 
 参考：
 
-- [example/lib/pages/input/keyboard_media_query_page.dart](../../example/lib/pages/input/keyboard_media_query_page.dart)
+- API 说明见 [usage.md](usage.md) 中的 `MediaQuery` 和 `viewInsets` 小节
 
 ## 10. 1px 线条发虚
 
@@ -140,15 +142,15 @@
 
 参考：
 
-- [example/lib/pages/graphics/physical_pixel_demo_page.dart](../../example/lib/pages/graphics/physical_pixel_demo_page.dart)
+- API 说明见 [usage.md](usage.md) 中的 `PhysicalPixelZone` 小节
 
 ## 11. 还不知道该看哪个 demo
 
 按问题类型选：
 
-- 全局适配不对：`Adaptation Gallery`
+- 全局适配不对：示例首页和 `usage.md`
 - 局部反适配不对：`UnscaledZone`
 - 点击 / 拖拽不对：`Pointer Events`
-- 原生视图不对：`PlatformView`
-- 像素线条不对：`PhysicalPixelZone`
-- 键盘 / inset 不对：`Keyboard & Insets`
+- 原生视图不对：`AdaptedPlatformView` 文档
+- 像素线条不对：`PhysicalPixelZone` 文档
+- 键盘 / inset 不对：`MediaQuery` / `viewInsets` 文档

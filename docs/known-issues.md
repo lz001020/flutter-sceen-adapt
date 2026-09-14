@@ -1,27 +1,27 @@
 # `screen_adapt` 已知问题与设计限制
 
-如果你还不清楚整套文档怎么分工，先看 [文档导航](../../docs/README.md)。
+其他文档见 [文档导航](README.md)。
 
 本文档只记录两类内容：
 
 - 当前实现仍需关注的风险
 - 明确属于设计约束、不是 bug 的行为
 
+## 支持边界
+
+### Flutter Web、桌面端和多窗口
+
+当前版本只验证 Android / iOS 移动端单窗口应用：
+
+- Flutter Web 暂不支持，不能直接导入或复用当前实现
+- 桌面端不在当前产品范围内，窗口 resize 语义不提供兼容承诺
+- 多窗口 / 多 view 不在当前产品范围内，`ScreenSizeUtils` 仍按主 view 的全局单例设计
+
+如果未来需要支持这些平台，应先单独定义各平台的设计稿、窗口和输入坐标语义，再扩展实现。
+
 ## 仍待处理
 
-### 1. Flutter Web 兼容性
-
-当前 `ScreenSizeUtils` 仍依赖 `dart:io` 的 `Platform` 判断桌面平台。
-
-影响：
-
-- Flutter Web 不可直接复用这套逻辑
-
-建议：
-
-- 改成 `kIsWeb + defaultTargetPlatform`
-
-### 2. `onPointerDataPacket` 接管方式存在冲突风险
+### 1. `onPointerDataPacket` 接管方式存在冲突风险
 
 当前方案会直接接管 `PlatformDispatcher.instance.onPointerDataPacket`。
 
@@ -34,7 +34,7 @@
 - 缓存原始回调
 - 改成链式调用
 
-### 3. 高刷设备上的指针重采样仍需真机验证
+### 2. 高刷设备上的指针重采样仍需真机验证
 
 当前方案在 binding 层处理指针包，有可能绕开 Flutter 某些内部重采样路径。
 
@@ -42,15 +42,7 @@
 
 - 90Hz / 120Hz 设备上的拖拽顺滑度需要继续验证
 
-### 4. 桌面端 resize 的产品语义还不够明确
-
-当前桌面端在窗口变化后会更新指标，但 scale 是否应该跟着窗口实时重算，仍需要明确产品预期。
-
-影响：
-
-- 不同人对“桌面端是否固定 scale”可能有不同理解
-
-### 5. `handleMetricsChanged()` 存在重复计算
+### 3. `handleMetricsChanged()` 存在重复计算
 
 当前某些路径里会多次调用 `ScreenSizeUtils.setup()`。
 
@@ -58,19 +50,11 @@
 
 - 通常不致错，但存在不必要的重复计算
 
-### 6. 多窗口 / 多 view 场景支持有限
-
-当前 `ScreenSizeUtils` 仍是全局单例，并默认围绕主 view 工作。
-
-影响：
-
-- 多窗口或未来多 view 场景不够自然
-
-### 7. 横屏设计稿仍建议真机验证
+### 4. 横屏设计稿仍建议真机验证
 
 当前实现会根据横竖屏对宽高参与计算的方式做调整，但“设备横屏”和“设计稿本身横屏”的组合场景仍建议单独验证。
 
-### 8. 手动嵌套 `DesignSizeWidget` 仍可能引入双重缩放
+### 5. 手动嵌套 `DesignSizeWidget` 仍可能引入双重缩放
 
 当前实现已经尽量降低嵌套冲突，但如果用户在已经启用 binding 的应用里再次手动套用 `DesignSizeWidget`，仍有可能在已适配的 `MediaQueryData` 基础上再次执行 `.design()`。
 
@@ -129,6 +113,6 @@
 
 ## 建议的阅读顺序
 
-- 如何接入： [Usage.md](../../docs/usage.md)
-- 为什么这样设计： [Concept.md](../../docs/concepts.md)
-- 遇到问题怎么排查： [Troubleshooting.md](../../docs/troubleshooting.md)
+- 如何接入： [usage.md](usage.md)
+- 为什么这样设计： [concepts.md](concepts.md)
+- 遇到问题怎么排查： [troubleshooting.md](troubleshooting.md)

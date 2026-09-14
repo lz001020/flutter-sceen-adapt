@@ -169,7 +169,7 @@ DesignSizeWidgetsFlutterBinding.ensureInitialized(
 
 ## 7. 进一步阅读
 
-- 总方案文档：`docs/adoption-guide.md`
+- 总方案文档：`README.md`
 - 日常使用：`docs/usage.md`
 - 底层原理：`docs/concepts.md`
 - 已知限制：`docs/known-issues.md`

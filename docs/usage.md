@@ -1,12 +1,14 @@
 # `screen_adapt` 使用指南
 
+> 支持范围：Android / iOS 移动端、单窗口应用。Flutter Web、桌面端和多窗口 / 多 view 暂不支持。
+
 本文档只回答两个问题：
 
 - 怎么接入
 - 遇到局部特殊场景时该用哪个能力
 
-如果你想看底层原理，读 [Concept.md](../../docs/concepts.md)；如果你想看当前限制，读 [KnownIssues.md](../../docs/known-issues.md)。
-如果你还不清楚整套文档怎么分工，先看 [文档导航](../../docs/README.md)。
+如果你想看底层原理，读 [concepts.md](concepts.md)；如果你想看当前限制，读 [known-issues.md](known-issues.md)。
+其他文档见 [文档导航](README.md)。
 
 ## 1. 接入
 
@@ -138,7 +140,7 @@ DesignSize.of(context).reset();
 适合：
 
 - 调试不同设计稿基线
-- 平板 / 桌面场景下按窗口或断点切换设计稿
+- 在移动端按页面或业务状态切换设计稿
 
 ## 5. 从 `flutter_screenutil` 迁移
 
@@ -415,18 +417,12 @@ UnscaledZone(
 
 专题页：
 
-- [example/lib/pages/adaptation/adaptation_gallery_page.dart](../../example/lib/pages/adaptation/adaptation_gallery_page.dart)
-  看全局适配和设计稿切换
+- [example/lib/app/home_page.dart](../example/lib/app/home_page.dart)
+  看当前示例入口和移动端适配验证页面
 - [example/lib/pages/unscaled_zone/unscaled_zone_demo_page.dart](../../example/lib/pages/unscaled_zone/unscaled_zone_demo_page.dart)
   看 `UnscaledZone` 两种模式、嵌套、row sibling 影响、重进适配态
 - [example/lib/pages/input/pointer_events_page.dart](../../example/lib/pages/input/pointer_events_page.dart)
   看点击和拖拽是否准确
-- [example/lib/pages/platform_view/platform_view_demo_page.dart](../../example/lib/pages/platform_view/platform_view_demo_page.dart)
-  看原生视图补偿
-- [example/lib/pages/graphics/physical_pixel_demo_page.dart](../../example/lib/pages/graphics/physical_pixel_demo_page.dart)
-  看物理像素语义
-- [example/lib/pages/input/keyboard_media_query_page.dart](../../example/lib/pages/input/keyboard_media_query_page.dart)
-  看键盘与 `viewInsets`
 
 ## 9. 常见判断
 

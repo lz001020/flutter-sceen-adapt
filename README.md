@@ -2,6 +2,8 @@
 
 一个基于 Flutter 底层渲染链路的屏幕适配方案。
 
+当前版本的支持范围是 **Android / iOS 移动端、单窗口应用**。Flutter Web、桌面端和多窗口 / 多 view 不在当前支持范围内；文档中的示例和验证结论也都以移动端单窗口为准。
+
 它的目标不是在业务代码里到处写 `.w / .h / .sp`，而是在全局逻辑坐标系层面一次性完成设计稿映射。接入后，业务层大多数场景可以直接按设计稿尺寸写布局；当某个局部区域不适合参与全局适配时，再通过 `UnscaledZone`、`AdaptedPlatformView`、`PhysicalPixelZone` 做精确补偿。
 
 ## 适合什么问题
@@ -403,18 +405,12 @@ import 'package:screen_adapt/screen_adapt.dart';
 
 专题页面：
 
-- [example/lib/pages/adaptation/adaptation_gallery_page.dart](example/lib/pages/adaptation/adaptation_gallery_page.dart)
-  全局适配、设计稿切换、字体和布局缩放
 - [example/lib/pages/unscaled_zone/unscaled_zone_demo_page.dart](example/lib/pages/unscaled_zone/unscaled_zone_demo_page.dart)
   `UnscaledZone` 的 `context / paint / layout` 语义、嵌套、row sibling 影响、重进适配态
 - [example/lib/pages/input/pointer_events_page.dart](example/lib/pages/input/pointer_events_page.dart)
   指针事件、拖拽轨迹、命中测试
-- [example/lib/pages/platform_view/platform_view_demo_page.dart](example/lib/pages/platform_view/platform_view_demo_page.dart)
-  `PlatformView` 视觉补偿
-- [example/lib/pages/graphics/physical_pixel_demo_page.dart](example/lib/pages/graphics/physical_pixel_demo_page.dart)
-  物理像素语义和 1px 绘制
-- [example/lib/pages/input/keyboard_media_query_page.dart](example/lib/pages/input/keyboard_media_query_page.dart)
-  键盘、`viewInsets`、`MediaQuery` 变化
+
+当前示例工程只保留上述两个移动端验证页面；PlatformView、物理像素和键盘场景由对应 API 文档覆盖。
 
 示例说明见 [example/README.md](example/README.md)。
 
@@ -423,7 +419,7 @@ import 'package:screen_adapt/screen_adapt.dart';
 - `contextFallback` 会保留原父布局槽位，所以相邻 widget 仍可能被“逻辑坑位”推开
 - `full` 会一起回退布局占位，但它的行为仍受父约束体系影响
 - `PhysicalPixelZone` 主要改变内部绘制语义，不会自动改变外层占位
-- 当前实现仍主要围绕单 view 场景设计，多窗口 / 多 view 支持有限
+- 当前版本只针对移动端单窗口场景验证；桌面端、多窗口 / 多 view 和 Flutter Web 暂不支持
 
 ## Roadmap
 
@@ -442,8 +438,6 @@ import 'package:screen_adapt/screen_adapt.dart';
 ## 进一步阅读
 
 - [docs/README.md](docs/README.md)
-- [docs/adoption-guide.md](docs/adoption-guide.md)
-- [docs/decision-brief.md](docs/decision-brief.md)
 - [docs/project-template.md](docs/project-template.md)
 - [docs/usage.md](docs/usage.md)
 - [docs/concepts.md](docs/concepts.md)

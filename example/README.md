@@ -56,24 +56,9 @@ DesignSizeWidgetsFlutterBinding.ensureInitialized(
 
 ## 专题页
 
-### 1. Adaptation Gallery
+示例工程按 Android / iOS 单窗口移动设备设计，不能用于判断 Flutter Web、桌面端或多窗口场景的兼容性。
 
-文件：
-
-- [example/lib/pages/adaptation/adaptation_gallery_page.dart](example/lib/pages/adaptation/adaptation_gallery_page.dart)
-
-重点看：
-
-- 固定设计稿尺寸组件是否整体缩放
-- 字体、间距、栅格是否保持设计稿语义
-- 当前 `MediaQuery` 是否和适配结果一致
-
-适合回答：
-
-- 全局适配到底有没有生效
-- 设计稿切换后是否立即反映到页面
-
-### 2. UnscaledZone
+### 1. UnscaledZone
 
 文件：
 
@@ -89,7 +74,7 @@ DesignSizeWidgetsFlutterBinding.ensureInitialized(
 
 这一页是理解当前实现最重要的一页。
 
-### 3. Pointer Events
+### 2. Pointer Events
 
 文件：
 
@@ -105,63 +90,16 @@ DesignSizeWidgetsFlutterBinding.ensureInitialized(
 
 - 改了全局逻辑坐标系之后，手势有没有跟上
 
-### 4. PlatformView
-
-文件：
-
-- [example/lib/pages/platform_view/platform_view_demo_page.dart](example/lib/pages/platform_view/platform_view_demo_page.dart)
-
-重点看：
-
-- 原生视图在全局适配下未补偿时的失真
-- `AdaptedPlatformView` 补偿后的尺寸与点击表现
-- Flutter 容器边界和原生内容是否重新对齐
-
-适合回答：
-
-- 为什么普通 `PlatformView` 不能直接放进全局适配环境
-
-### 5. PhysicalPixelZone
-
-文件：
-
-- [example/lib/pages/graphics/physical_pixel_demo_page.dart](example/lib/pages/graphics/physical_pixel_demo_page.dart)
-
-重点看：
-
-- 1px 线条和细网格在普通逻辑像素下的表现
-- `PhysicalPixelZone` 内部 `width: 1` 的物理像素语义
-
-适合回答：
-
-- 为什么有些绘制问题不是全局适配能解决的，而要回到物理像素语义
-
-### 6. Keyboard & Insets
-
-文件：
-
-- [example/lib/pages/input/keyboard_media_query_page.dart](example/lib/pages/input/keyboard_media_query_page.dart)
-
-重点看：
-
-- 键盘弹出后 `viewInsets` 是否正确
-- 输入区和诊断区是否能一起滚动，避免被键盘遮挡
-- `padding / viewPadding / viewInsets` 是否可观测
-
-适合回答：
-
-- 全局适配后，`MediaQuery` 和键盘相关指标是否还可信
-
 ## 如何把示例用于验证
+
+示例工程按 Android / iOS 单窗口移动设备设计，不能用于判断 Flutter Web、桌面端或多窗口场景的兼容性。
 
 你可以按问题类型选页面：
 
-- 全局布局不对：`Adaptation Gallery`
+- 全局布局不对：示例首页和主文档
 - 局部退出适配不对：`UnscaledZone`
 - 点击偏移：`Pointer Events`
-- 原生视图尺寸不对：`PlatformView`
-- 1px 线条发虚：`PhysicalPixelZone`
-- 键盘遮挡 / inset 异常：`Keyboard & Insets`
+- 原生视图、物理像素和键盘场景：参考主文档对应 API 小节
 
 ## 和主文档的关系
 
