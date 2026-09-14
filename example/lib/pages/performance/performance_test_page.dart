@@ -68,6 +68,9 @@ class _PerformanceTestPageState extends State<PerformanceTestPage> {
   }
 
   void _finishGesture(DragEndDetails details) {
+    if (_drag.abs() < 1) {
+      return;
+    }
     _gestures++;
     _profileIndex = (_profileIndex + 1) % _profiles.length;
     final size = _profiles[_profileIndex];

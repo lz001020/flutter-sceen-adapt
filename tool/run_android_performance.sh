@@ -70,8 +70,8 @@ done
 
 sleep 2
 
-gfx_report="$report_dir/android_gfxinfo.txt"
-flutter_report="$report_dir/flutter_frames.txt"
+gfx_report="$report_dir/${device_id}_android_gfxinfo.txt"
+flutter_report="$report_dir/${device_id}_flutter_frames.txt"
 adb -s "$device_id" shell dumpsys gfxinfo "$package_name" > "$gfx_report"
 adb -s "$device_id" logcat -d -s flutter | \
   rg '\[demo:performance\]|Unhandled Exception|ERROR' > "$flutter_report" || true
