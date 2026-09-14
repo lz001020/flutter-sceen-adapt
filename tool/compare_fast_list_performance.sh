@@ -9,4 +9,6 @@ PERF_SCROLL_COUNT=50 \
 PERF_SCROLL_DURATION_MS=60 \
 PERF_SCROLL_PAUSE_SECONDS=0.08 \
 PERF_REPORT_LABEL=fast_complex_list \
+PERF_ROUNDS=3 \
+PERF_AUTO_SCROLL=1 \
   "$repo_dir/tool/compare_list_performance.sh" "$device_id"

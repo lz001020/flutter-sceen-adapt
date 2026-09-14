@@ -53,9 +53,16 @@ class ComplexListBenchmarkPage extends StatefulWidget {
 
 class _ComplexListBenchmarkPageState extends State<ComplexListBenchmarkPage> {
   static const _sampleSize = 120;
+  static const _autoScroll =
+      bool.fromEnvironment('PERF_AUTO_SCROLL', defaultValue: false);
+  static const _autoScrollCount =
+      int.fromEnvironment('PERF_SCROLL_COUNT', defaultValue: 50);
+  static const _autoScrollDurationMs =
+      int.fromEnvironment('PERF_SCROLL_DURATION_MS', defaultValue: 60);
   final List<int> _frameTimes = <int>[];
   final List<int> _buildTimes = <int>[];
   final List<int> _rasterTimes = <int>[];
+  final ScrollController _scrollController = ScrollController();
   int _scrolls = 0;
   int _nextReportAt = _sampleSize;
 
@@ -64,12 +71,57 @@ class _ComplexListBenchmarkPageState extends State<ComplexListBenchmarkPage> {
     super.initState();
     SchedulerBinding.instance.addTimingsCallback(_recordFrameTimings);
     debugPrint('[demo:list_performance] engine=${widget.engine} ready');
+    if (_autoScroll) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _runAutoScroll());
+    }
   }
 
   @override
   void dispose() {
     SchedulerBinding.instance.removeTimingsCallback(_recordFrameTimings);
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _runAutoScroll() async {
+    for (var attempt = 0; attempt < 120; attempt++) {
+      if (!mounted) return;
+      if (_scrollController.hasClients &&
+          _scrollController.position.viewportDimension > 0 &&
+          _scrollController.position.maxScrollExtent > 0) {
+        break;
+      }
+      await WidgetsBinding.instance.endOfFrame;
+    }
+    if (!mounted ||
+        !_scrollController.hasClients ||
+        _scrollController.position.maxScrollExtent <= 0) {
+      debugPrint('[demo:list_performance] engine=${widget.engine} '
+          'automationError=listNotScrollable');
+      return;
+    }
+
+    const forwardCount = _autoScrollCount * 2 ~/ 3;
+    for (var index = 0; index < _autoScrollCount; index++) {
+      if (!mounted || !_scrollController.hasClients) return;
+      final position = _scrollController.position;
+      final distance = position.viewportDimension * 0.8;
+      final delta = index < forwardCount ? distance : -distance;
+      final target = (position.pixels + delta).clamp(
+        position.minScrollExtent,
+        position.maxScrollExtent,
+      );
+      await _scrollController.animateTo(
+        target,
+        duration: const Duration(milliseconds: _autoScrollDurationMs),
+        curve: Curves.linear,
+      );
+    }
+    await WidgetsBinding.instance.endOfFrame;
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+    _printSummary();
+    debugPrint('[demo:list_performance] engine=${widget.engine} '
+        'automationComplete=$_autoScrollCount');
   }
 
   int _percentile(List<int> sorted, int percentile) {
@@ -89,6 +141,12 @@ class _ComplexListBenchmarkPageState extends State<ComplexListBenchmarkPage> {
     );
     if (_frameTimes.length < _nextReportAt) return;
     _nextReportAt += _sampleSize;
+
+    _printSummary();
+  }
+
+  void _printSummary() {
+    if (_frameTimes.isEmpty) return;
 
     final sorted = List<int>.of(_frameTimes)..sort();
     final buildSorted = List<int>.of(_buildTimes)..sort();
@@ -128,6 +186,7 @@ class _ComplexListBenchmarkPageState extends State<ComplexListBenchmarkPage> {
         onNotification: _onScrollEnd,
         child: ListView.builder(
           key: const ValueKey('complex-list'),
+          controller: _scrollController,
           itemCount: 1000,
           cacheExtent: h(600),
           itemBuilder: (context, index) {
