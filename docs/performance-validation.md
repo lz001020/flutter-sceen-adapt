@@ -76,22 +76,22 @@ adb -s emulator-5554 shell dumpsys gfxinfo com.example.example
 
 ### 快速滚动
 
-普通对照使用 30 次 250ms 滑动。快速列表对照使用 50 次 60ms fling，并在手势之间保留短暂惯性滚动时间：
+普通对照使用 30 次 250ms ADB 滑动。快速列表对照由应用内部执行 50 次 60ms 线性滚动，每次移动视口高度的 80%，避免 ADB 手势调度造成两种实现的工作量不一致：
 
 ```bash
 ./tool/compare_fast_list_performance.sh 8e3b2e1c
 ```
 
-该测试更关注快速创建列表项时的 build、layout 和 raster 压力，报告保存在 `build/performance/<device-id>_<engine>_fast_complex_list.txt`。快速滚动与 const 高频重建回答的是不同问题，两者结果应分别记录。
+脚本默认执行三轮并交叉运行顺序：第 1、3 轮先运行 `screen_adapt`，第 2 轮先运行 `flutter_screenutil`，最后输出各指标的中位数。每轮报告保存在 `build/performance/<device-id>_<engine>_fast_complex_list_round<N>.txt`。快速滚动与 const 高频重建回答的是不同问题，两者结果应分别记录。
 
-2026-09-14 在真机 `23127PN0CC` 上的首轮快速滚动结果：
+2026-09-14 在真机 `23127PN0CC`（Android 16、1200x2670）上的三轮中位数：
 
 | 实现 | 帧数 | build p90 | raster p90 | total p90 | p99 | >16.667ms |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| screen_adapt | 1448 | 2.322ms | 2.838ms | 6.119ms | 7.055ms | 2 |
-| flutter_screenutil | 1570 | 2.249ms | 2.857ms | 6.051ms | 7.062ms | 1 |
+| screen_adapt | 393 | 2.173ms | 2.740ms | 5.706ms | 10.610ms | 2 |
+| flutter_screenutil | 393 | 2.165ms | 2.663ms | 5.990ms | 10.454ms | 2 |
 
-首轮中两者处于同一量级，ScreenUtil 的 build / total p90 略低，差异约 1%–3%。快速滚动主要触发新 item 的首次 mount/build，const 无法跳过首次构建，所以不应期待出现高频重建测试中的 const 优势。两边采样帧数存在约 8% 差异，本轮只作为基线，至少重复三轮并取中位数后再判断稳定趋势。
+两边帧数中位数一致，工作量可以直接比较。该组数据中 `screen_adapt` 的 total p90 约低 4.7%，build p90、raster p90、p99 和卡顿帧处于同一量级。快速滚动主要触发新 item 的首次 mount/build，const 无法跳过首次构建，所以不应期待出现高频重建测试中的 const 优势。该结论仅代表当前设备和测试场景，不等同于所有页面上的总体性能结论。
 
 ## const 高频重建对比
 
