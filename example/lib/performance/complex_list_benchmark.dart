@@ -54,6 +54,8 @@ class ComplexListBenchmarkPage extends StatefulWidget {
 class _ComplexListBenchmarkPageState extends State<ComplexListBenchmarkPage> {
   static const _sampleSize = 120;
   final List<int> _frameTimes = <int>[];
+  final List<int> _buildTimes = <int>[];
+  final List<int> _rasterTimes = <int>[];
   int _scrolls = 0;
   int _nextReportAt = _sampleSize;
 
@@ -79,16 +81,27 @@ class _ComplexListBenchmarkPageState extends State<ComplexListBenchmarkPage> {
     _frameTimes.addAll(
       timings.map((timing) => timing.totalSpan.inMicroseconds),
     );
+    _buildTimes.addAll(
+      timings.map((timing) => timing.buildDuration.inMicroseconds),
+    );
+    _rasterTimes.addAll(
+      timings.map((timing) => timing.rasterDuration.inMicroseconds),
+    );
     if (_frameTimes.length < _nextReportAt) return;
     _nextReportAt += _sampleSize;
 
     final sorted = List<int>.of(_frameTimes)..sort();
+    final buildSorted = List<int>.of(_buildTimes)..sort();
+    final rasterSorted = List<int>.of(_rasterTimes)..sort();
     final janky = sorted.where((value) => value > 16667).length;
     debugPrint('[demo:list_performance] engine=${widget.engine} '
         'totalFrames=${sorted.length} '
         'p50=${_percentile(sorted, 50)}us '
         'p90=${_percentile(sorted, 90)}us '
-        'p99=${_percentile(sorted, 99)}us janky16ms=$janky');
+        'p99=${_percentile(sorted, 99)}us '
+        'buildP90=${_percentile(buildSorted, 90)}us '
+        'rasterP90=${_percentile(rasterSorted, 90)}us '
+        'janky16ms=$janky');
   }
 
   bool _onScrollEnd(ScrollEndNotification notification) {
