@@ -211,6 +211,8 @@ class _DividedTextScaler implements TextScaler {
   final double divisor;
 
   @override
+  // TextScaler still requires this compatibility getter in Flutter 3.35.
+  // ignore: deprecated_member_use
   double get textScaleFactor => delegate.textScaleFactor / divisor;
 
   @override
