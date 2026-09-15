@@ -21,11 +21,7 @@
 
 ## 仍待处理
 
-### 1. Android 16 KB page size 打包对齐
-
-当前 example 的 Profile APK 在 Android 37 模拟器上会提示部分原生库未按 16 KB 对齐。该问题来自 example 使用的旧 Gradle / Android Gradle Plugin 打包链，发布前需要升级并重新验证 APK 对齐。
-
-### 2. `onPointerDataPacket` 接管方式存在冲突风险
+### 1. `onPointerDataPacket` 接管方式存在冲突风险
 
 当前方案会直接接管 `PlatformDispatcher.instance.onPointerDataPacket`。
 
@@ -49,7 +45,7 @@ rg "onPointerDataPacket\\s*=" .
 
 如果插件在适配 binding 初始化之后直接赋值，必须调整初始化顺序，或让插件提供 binding mixin / 链式回调；单靠 `screen_adapt` 无法同时保留两个直接赋值的回调。
 
-### 3. 高刷设备上的指针重采样仍需真机验证
+### 2. 高刷设备上的指针重采样仍需真机验证
 
 当前方案在 binding 层处理指针包，有可能绕开 Flutter 某些内部重采样路径。
 
@@ -57,7 +53,7 @@ rg "onPointerDataPacket\\s*=" .
 
 - 90Hz / 120Hz 设备上的拖拽顺滑度需要继续验证
 
-### 4. `handleMetricsChanged()` 存在重复计算
+### 3. `handleMetricsChanged()` 存在重复计算
 
 当前某些路径里会多次调用 `ScreenSizeUtils.setup()`。
 
@@ -65,11 +61,11 @@ rg "onPointerDataPacket\\s*=" .
 
 - 通常不致错，但存在不必要的重复计算
 
-### 5. 横屏设计稿仍建议真机验证
+### 4. 横屏设计稿仍建议真机验证
 
 当前实现会根据横竖屏对宽高参与计算的方式做调整，但“设备横屏”和“设计稿本身横屏”的组合场景仍建议单独验证。
 
-### 6. 手动嵌套 `DesignSizeWidget` 仍可能引入双重缩放
+### 5. 手动嵌套 `DesignSizeWidget` 仍可能引入双重缩放
 
 当前实现已经尽量降低嵌套冲突，但如果用户在已经启用 binding 的应用里再次手动套用 `DesignSizeWidget`，仍有可能在已适配的 `MediaQueryData` 基础上再次执行 `.design()`。
 
@@ -111,18 +107,27 @@ rg "onPointerDataPacket\\s*=" .
 
 ## 已修复但值得保留背景
 
-### 1. `originData` 空安全问题
+### 1. Android 16 KB page size 打包对齐
+
+example 已升级到 Gradle 8.7、Android Gradle Plugin 8.6.1 和 Kotlin 2.1.0。2026-09-15 使用 Flutter 3.35.7 构建 Profile APK 后完成两层验证：
+
+- `zipalign -c -P 16 -v 4 app-profile.apk` 验证成功，APK 内全部原生库满足 16 KB ZIP 对齐
+- `objdump -p` 显示 arm64-v8a 和 x86_64 原生库的全部 LOAD 段均为 `2**16` 对齐
+
+后续引入包含原生库的插件或升级 Android 构建工具链时，需要重新执行这两项验证。
+
+### 2. `originData` 空安全问题
 
 此前 `originData` 的声明和使用语义不一致，当前已改为可空并安全降级。
 
-### 2. `UnscaledZone` 默认模式语义不完整
+### 3. `UnscaledZone` 默认模式语义不完整
 
 此前默认模式更像“只回退上下文”，现在已经明确拆成：
 
 - `contextFallback = context + paint`
 - `full = context + layout + paint`
 
-### 3. `PlatformDispatcher.instance.views.first` 无防御访问
+### 4. `PlatformDispatcher.instance.views.first` 无防御访问
 
 当前已补充空视图防御，避免 fallback 场景直接抛异常。
 
