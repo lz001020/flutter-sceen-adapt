@@ -47,6 +47,26 @@ class ScreenSizeUtils {
   /// 是否为桌面平台
   bool _isDesktop = false;
 
+  MediaQueryData? _lastSetupInput;
+  FlutterView? _lastSetupView;
+  Object? _lastSetupState;
+
+  Object get _setupState => (
+        designSize,
+        adaptType,
+        scaleText,
+        supportSystemTextScale,
+        scale,
+        originData,
+        data,
+      );
+
+  void _rememberSetup(FlutterView view) {
+    _lastSetupInput = originData;
+    _lastSetupView = view;
+    _lastSetupState = _setupState;
+  }
+
   // 单例实现
   factory ScreenSizeUtils() => instance;
   static final ScreenSizeUtils instance = _getInstance();
@@ -71,6 +91,7 @@ class ScreenSizeUtils {
 
   void _resetToFallbackMetrics() {
     originData = null;
+    _lastSetupInput = null;
     data = const MediaQueryData();
     scale = defaultScale;
   }
@@ -91,6 +112,7 @@ class ScreenSizeUtils {
     this.scaleText = scaleText;
     this.supportSystemTextScale = supportSystemTextScale;
     _isDesktop = _detectDesktopPlatform();
+    _lastSetupInput = null;
     setup();
   }
 
@@ -116,6 +138,7 @@ class ScreenSizeUtils {
     data = originData!;
     scaleText = true;
     supportSystemTextScale = true;
+    _rememberSetup(view);
   }
 
   /// 根据所选的 [adaptType] 设置屏幕适配参数。
@@ -132,7 +155,14 @@ class ScreenSizeUtils {
       return;
     }
 
-    originData = MediaQueryData.fromView(view);
+    final currentData = MediaQueryData.fromView(view);
+    if (identical(_lastSetupView, view) &&
+        _lastSetupInput == currentData &&
+        _lastSetupState == _setupState &&
+        originData != null) {
+      return;
+    }
+    originData = currentData;
 
     if (designSize.isEmpty) {
       designSize = originData!.size;
@@ -141,11 +171,13 @@ class ScreenSizeUtils {
       }
       scale = defaultScale;
       data = originData!;
+      _rememberSetup(view);
       return;
     }
 
     if (_isDesktop && scale != defaultScale) {
       data = originData!.design(); // 对于桌面端，如果 scale 是自定义的，则应用它
+      _rememberSetup(view);
       return;
     }
 
@@ -175,6 +207,7 @@ class ScreenSizeUtils {
     }
 
     data = originData!.design();
+    _rememberSetup(view);
   }
 }
 
