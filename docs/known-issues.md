@@ -53,19 +53,11 @@ rg "onPointerDataPacket\\s*=" .
 
 - 90Hz / 120Hz 设备上的拖拽顺滑度需要继续验证
 
-### 3. `handleMetricsChanged()` 存在重复计算
-
-当前某些路径里会多次调用 `ScreenSizeUtils.setup()`。
-
-影响：
-
-- 通常不致错，但存在不必要的重复计算
-
-### 4. 横屏设计稿仍建议真机验证
+### 3. 横屏设计稿仍建议真机验证
 
 当前实现会根据横竖屏对宽高参与计算的方式做调整，但“设备横屏”和“设计稿本身横屏”的组合场景仍建议单独验证。
 
-### 5. 手动嵌套 `DesignSizeWidget` 仍可能引入双重缩放
+### 4. 手动嵌套 `DesignSizeWidget` 仍可能引入双重缩放
 
 当前实现已经尽量降低嵌套冲突，但如果用户在已经启用 binding 的应用里再次手动套用 `DesignSizeWidget`，仍有可能在已适配的 `MediaQueryData` 基础上再次执行 `.design()`。
 
@@ -120,14 +112,18 @@ example 已升级到 Gradle 8.7、Android Gradle Plugin 8.6.1 和 Kotlin 2.1.0�
 
 此前 `originData` 的声明和使用语义不一致，当前已改为可空并安全降级。
 
-### 3. `UnscaledZone` 默认模式语义不完整
+### 3. `handleMetricsChanged()` 重复计算
+
+`ScreenSizeUtils.setup()` 现在按窗口指标、设计尺寸、适配策略和字体配置进行输入快照缓存。binding 与 `DesignSizeWidget` 重复通知时会复用同一份结果；窗口尺寸、DPR、键盘 inset 或配置变化会自动使缓存失效。
+
+### 4. `UnscaledZone` 默认模式语义不完整
 
 此前默认模式更像“只回退上下文”，现在已经明确拆成：
 
 - `contextFallback = context + paint`
 - `full = context + layout + paint`
 
-### 4. `PlatformDispatcher.instance.views.first` 无防御访问
+### 5. `PlatformDispatcher.instance.views.first` 无防御访问
 
 当前已补充空视图防御，避免 fallback 场景直接抛异常。
 
