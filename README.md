@@ -382,7 +382,7 @@ import 'package:screen_adapt/screen_adapt.dart';
 
 - `DesignSizeWidgetsFlutterBinding.ensureInitialized(...)`
 - `ScreenAdaptType`
-- `ScreenSizeUtils.instance`
+- `DesignSize.of(context).metrics`
 - `DesignSize.of(context).setDesignSize(...)`
 - `DesignSize.of(context).reset()`
 - `LegacyScreenUtilScope`

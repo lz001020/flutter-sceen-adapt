@@ -97,6 +97,8 @@ rg "onPointerDataPacket\\s*=" .
 
 如果要让外层占位也一起变化，需要额外约束组件配合。
 
+`PhysicalPixelZone` 需要有限的宽高约束。直接放入滚动轴等无界约束时会原样返回子组件；请先用 `SizedBox` 等提供有限尺寸，才能启用物理像素映射。
+
 ## 已修复但值得保留背景
 
 ### 1. Android 16 KB page size 打包对齐
@@ -114,7 +116,7 @@ example 已升级到 Gradle 8.7、Android Gradle Plugin 8.6.1 和 Kotlin 2.1.0�
 
 ### 3. `handleMetricsChanged()` 重复计算
 
-`ScreenSizeUtils.setup()` 现在按窗口指标、设计尺寸、适配策略和字体配置进行输入快照缓存。binding 与 `DesignSizeWidget` 重复通知时会复用同一份结果；窗口尺寸、DPR、键盘 inset 或配置变化会自动使缓存失效。
+设备指标由 binding 通过 `ScreenSizeUtils.setup()` 读取，再交给 `AdaptController` 去重并计算。根 Scope 直接订阅 Controller，不再重复读取设备；窗口尺寸、DPR、键盘 inset 或配置变化会产生新的指标快照。
 
 ### 4. `UnscaledZone` 默认模式语义不完整
 

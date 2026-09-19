@@ -137,6 +137,8 @@ DesignSize.of(context).setDesignSize(const Size(390, 844));
 DesignSize.of(context).reset();
 ```
 
+`setDesignSize()` 保留当前适配模式和字体策略。`reset()` 恢复原始设备坐标，后续旋转和键盘变化不会重新开启适配；再次调用 `setDesignSize()` 才会恢复适配。
+
 适合：
 
 - 调试不同设计稿基线
@@ -294,13 +296,15 @@ LegacyScreenUtilScope(
 
 - `180.w / 180.h / 16.sp / 20.r` -> `180 / 180 / 16 / 20`
 - `1.sw / 1.sh` -> `MediaQuery.sizeOf(context)` 或标准约束布局
-- 读取真实设备指标 -> `ScreenSizeUtils.instance.originData`
+- 读取真实设备指标 -> `DesignSize.of(context).metrics?.origin`
 
 ## 6. 局部退出全局适配
 
 ### `UnscaledZone`
 
 `UnscaledZone` 用于“全局适配已经打开，但局部区域不该跟着适配”的场景。
+
+局部组件从根 `DesignSizeWidget` 提供的 `AdaptScope` 读取指标（binding 自动挂载根组件）。没有此上下文时，`UnscaledZone`、`LegacyScreenUtilScope` 和 `AdaptedPlatformView` 不做补偿，也不会读取全局单例作为回退。
 
 当前实现按三层能力拼装：
 

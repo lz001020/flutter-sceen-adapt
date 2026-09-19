@@ -73,19 +73,27 @@
 
 这样一来，Flutter 后续的 layout / paint 都直接基于“适配后的逻辑世界”运行。
 
-## 3. `ScreenSizeUtils`
+## 3. 指标计算与状态
 
 入口在：
 
 - [lib/src/core/screen_metrics.dart](../../lib/src/core/screen_metrics.dart)
 
-它是整个方案的中心状态管理器，负责：
+指标链路分成两层：
+
+- `AdaptConfig`：不可变的设计尺寸、适配模式和字体策略
+- `AdaptCalculator`：不读取 binding 或全局单例的纯计算器
+- `AdaptMetrics`：一次计算产生的原始指标、适配指标和 scale
+- `AdaptController`：持有配置与指标，去重设备输入，调用计算器并通知订阅者；不读取 view，也不调用 binding
+- `ScreenSizeUtils`：保留现有 API 的设备适配层，读取 view 后交给 Controller
+
+`ScreenSizeUtils` 通过 Controller 暴露：
 
 - 保存设计稿尺寸
 - 保存适配模式
 - 保存原始 `MediaQueryData`
 - 保存适配后的 `MediaQueryData`
-- 计算全局 `scale`
+- 保存最新的不可变 `AdaptMetrics`
 
 这里的两个数据要区分：
 
@@ -94,7 +102,15 @@
 - `data`
   适配后的指标
 
-后面 `UnscaledZone`、`DesignSizeWidget`、指针补偿都会依赖这两个状态。
+后面 `UnscaledZone`、`DesignSizeWidget`、指针补偿都会依赖这两个状态。缩放公式和 `MediaQueryData` 转换可以脱离 Flutter binding 单独测试；后续状态管理重构也不需要再次改动计算规则。
+
+设备变化由 binding 调用 `setup()` 读取一次指标，再交给 Controller。运行时配置变化直接更新 Controller，由它通知 binding 更新 RenderView、通知根 Scope 重建 MediaQuery。`createViewConfigurationFor()` 只读取结果，根 Scope 不再模拟设备指标回调。
+
+渲染配置、指针坐标转换和根 Scope 都读取 Controller 的同一份 `AdaptMetrics`。旧兼容字段上的临时覆盖不会直接改变这些链路。尚无有效指标时，根 Scope 使用祖先 `MediaQuery` 并保持 scale 为 1；配置变化仍通知依赖 `DesignSize.of(context).config` 的组件。
+
+兼容入口 `ScreenSizeUtils.setDesignSize()` 将配置与本次读取的设备指标一同交给 Controller，只发布最终结果，避免先用旧设备指标计算一次再通知第二次。`reset()` 基于当前快照恢复原始坐标，不额外读取设备。瞬时无效设备指标不会覆盖上一份有效结果；配置仍可通过 `configure()` 单独更新。
+
+`DesignSize.of(context).setDesignSize(...)` 保留字体和适配策略。`reset()` 显式关闭适配，之后旋转或键盘变化仍使用原始指标，直到再次设置设计稿。旧的 `ScreenSizeUtils` 字段入口暂时保留；直接写入 `scale/originData/data` 仅用于兼容，正常更新应使用配置方法，设备刷新时会清除这些覆盖值。
 
 ## 4. 指针事件为什么要补偿
 
@@ -231,10 +247,12 @@
 
 显式往下传递当前子树状态：
 
+- 原始与适配后的 `MediaQueryData`
+- 当前 `scale`
 - 是否已经 `paintUnscaled`
 - 是否已经 `layoutUnscaled`
 
-这样内层只会补缺失层，不会重复反缩放。
+这样局部组件不需要读取全局单例，内层也只会补缺失层，不会重复反缩放。没有 `AdaptScope` 时，`UnscaledZone`、`LegacyScreenUtilScope` 和 `AdaptedPlatformView` 都原样返回，不会使用其他页面残留的窗口状态。
 
 ## 9. `DesignSizeWidget` 的作用
 
@@ -246,6 +264,7 @@
 
 - 局部重建适配态 `MediaQuery`
 - 让子树重新进入适配语义
+- 通过 `DesignSize.of(context).metrics` 向业务暴露当前不可变指标快照
 
 但它不会清掉祖先已经生效的 render 反缩放。
 

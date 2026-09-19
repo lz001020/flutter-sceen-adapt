@@ -35,6 +35,8 @@ adb logcat -d -s flutter | rg 'demo:profile|demo:pointer|demo:zone'
 
 example 目录运行 `flutter test`，验证页面导航、独立靶点计数、拖动、重置和几何结果。Widget test 不能替代真实设备的视觉触点确认。
 
+仓库根目录可单独运行 `flutter test test/binding_runtime_test.dart`：在宿主测试引擎中实际启动自定义 binding 和根组件树，切换 320、375、768 设计宽度，注入物理坐标的 `PointerDataPacket`，验证普通区域和 `UnscaledZone.full` 的边缘命中、外部不命中、物理宽度与 DPR，以及 reset 后恢复原始指标。此测试不使用系统触屏、软键盘或原生 PlatformView，不代表 Android / iOS 真机验收通过。
+
 ## 键盘与安全区
 
 1. 打开“键盘与安全区”，确认底部输入框、绿线未进入系统手势区。
