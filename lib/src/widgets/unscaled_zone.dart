@@ -3,7 +3,6 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 import 'package:screen_adapt/src/core/adapt_scope.dart';
-import 'package:screen_adapt/src/core/screen_metrics.dart';
 
 /// `UnscaledZone` 的反适配模式。
 enum UnscaledZoneMode {
@@ -42,8 +41,8 @@ class UnscaledZone extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scope = _resolveAdaptScope(context);
-    if (scope == null || scope.scale == ScreenSizeUtils.defaultScale) {
+    final scope = AdaptScope.maybeOf(context);
+    if (scope == null || scope.scale == 1) {
       return child;
     }
 
@@ -90,27 +89,6 @@ class UnscaledZone extends StatelessWidget {
 
     return result;
   }
-}
-
-AdaptScopeState? _resolveAdaptScope(BuildContext context) {
-  final inherited = AdaptScope.maybeOf(context);
-  if (inherited != null) {
-    return inherited;
-  }
-
-  final utils = ScreenSizeUtils.instance;
-  final origin = utils.originData;
-  if (origin == null) {
-    return null;
-  }
-
-  final adapted =
-      utils.data == const MediaQueryData() ? origin.design() : utils.data;
-  return AdaptScopeState(
-    scale: utils.scale,
-    originMediaQuery: origin,
-    adaptedMediaQuery: adapted,
-  );
 }
 
 class _PaintUnscale extends SingleChildRenderObjectWidget {

@@ -1,11 +1,12 @@
 // Public migration helper for isolating legacy flutter_screenutil subtrees.
 import 'package:flutter/material.dart';
 
-import 'package:screen_adapt/src/core/screen_metrics.dart';
+import 'package:screen_adapt/src/core/adapt_scope.dart';
 import 'package:screen_adapt/src/widgets/unscaled_zone.dart';
 
 /// 对 legacy 子树做额外包装的回调。
-typedef LegacyChildWrapper = Widget Function(BuildContext context, Widget child);
+typedef LegacyChildWrapper = Widget Function(
+    BuildContext context, Widget child);
 
 /// 用于过渡 `flutter_screenutil` 子树的兼容容器。
 ///
@@ -39,8 +40,7 @@ class LegacyScreenUtilScope extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final originMediaQuery =
-        ScreenSizeUtils.instance.originData ?? MediaQuery.maybeOf(context);
+    final originMediaQuery = AdaptScope.maybeOf(context)?.originMediaQuery;
 
     Widget result = UnscaledZone(
       mode: mode,

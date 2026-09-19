@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:screen_adapt/src/core/screen_metrics.dart';
+import 'package:screen_adapt/src/core/adapt_scope.dart';
 
 /// 针对 PlatformView（如 WebView, Map, Video）的视觉对齐包装器。
 ///
@@ -15,11 +15,14 @@ class AdaptedPlatformView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final origin = ScreenSizeUtils.instance.originData;
-    final adapted = MediaQuery.of(context);
+    final scope = AdaptScope.maybeOf(context);
+    if (scope == null) return child;
 
-    final originDpr = origin?.devicePixelRatio ?? adapted.devicePixelRatio;
-    final adaptedDpr = adapted.devicePixelRatio;
+    final origin = scope.originMediaQuery;
+    final current = MediaQuery.of(context);
+
+    final originDpr = origin.devicePixelRatio;
+    final adaptedDpr = current.devicePixelRatio;
 
     if (originDpr == 0) return child;
 
@@ -43,13 +46,20 @@ class AdaptedPlatformView extends StatelessWidget {
           width: width,
           height: height,
           child: ClipRect(
-            child: Transform.scale(
-              scale: factor,
+            child: OverflowBox(
               alignment: Alignment.topLeft,
-              child: SizedBox(
-                width: childWidth,
-                height: childHeight,
-                child: child,
+              minWidth: childWidth,
+              maxWidth: childWidth,
+              minHeight: childHeight,
+              maxHeight: childHeight,
+              child: Transform.scale(
+                scale: factor,
+                alignment: Alignment.topLeft,
+                child: SizedBox(
+                  width: childWidth,
+                  height: childHeight,
+                  child: child,
+                ),
               ),
             ),
           ),

@@ -11,6 +11,7 @@ import 'package:flutter/cupertino.dart';
 ///    文字高度大约是16个物理像素高。
 ///
 /// 这对于绘制精确的1px边框线、显示不允许缩放的图片（如二维码）等场景非常有用。
+/// 需要有限的宽高约束；无界约束下原样返回 child，不应用物理像素映射。
 class PhysicalPixelZone extends StatelessWidget {
   const PhysicalPixelZone({
     super.key,
@@ -29,6 +30,9 @@ class PhysicalPixelZone extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        if (!constraints.maxWidth.isFinite || !constraints.maxHeight.isFinite) {
+          return child;
+        }
         final double physicalWidth = constraints.maxWidth * dpr;
         final double physicalHeight = constraints.maxHeight * dpr;
 
