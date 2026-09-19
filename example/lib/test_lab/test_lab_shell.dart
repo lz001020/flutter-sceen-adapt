@@ -17,7 +17,6 @@ class TestLabShell extends StatelessWidget {
   final Widget? bottomPanel;
   @override
   Widget build(BuildContext context) {
-    final utils = ScreenSizeUtils.instance;
     final controller = DesignSize.maybeOf(context);
     return Scaffold(
       appBar: AppBar(title: Text(title), actions: [
@@ -38,23 +37,18 @@ class TestLabShell extends StatelessWidget {
             ])
               ChoiceChip(
                   label: Text('${size.width.toInt()}'),
-                  selected: utils.designSize == size,
+                  selected: controller?.config.designSize == size,
                   onSelected: controller == null
                       ? null
                       : (_) {
                           (onProfileChanged ?? onReset)();
                           // 切换设计尺寸时保留本次启动的字体策略。
-                          utils.setDesignSize(size,
-                              type: utils.adaptType,
-                              scaleText: utils.scaleText,
-                              supportSystemTextScale:
-                                  utils.supportSystemTextScale);
-                          WidgetsBinding.instance.handleMetricsChanged();
+                          controller.setDesignSize(size);
                           DemoDiagnostics.log('profile', 'design=$size');
                         }),
           ]),
           Text(
-              'scale=${utils.scale.toStringAsFixed(3)}  DPR=${MediaQuery.devicePixelRatioOf(context).toStringAsFixed(3)}'),
+              'scale=${(controller?.metrics?.scale ?? 1).toStringAsFixed(3)}  DPR=${MediaQuery.devicePixelRatioOf(context).toStringAsFixed(3)}'),
           const SizedBox(height: 16),
           child,
         ])),

@@ -74,14 +74,7 @@ class _PerformanceTestPageState extends State<PerformanceTestPage> {
     _gestures++;
     _profileIndex = (_profileIndex + 1) % _profiles.length;
     final size = _profiles[_profileIndex];
-    final utils = ScreenSizeUtils.instance;
-    utils.setDesignSize(
-      size,
-      type: utils.adaptType,
-      scaleText: utils.scaleText,
-      supportSystemTextScale: utils.supportSystemTextScale,
-    );
-    WidgetsBinding.instance.handleMetricsChanged();
+    DesignSize.of(context).setDesignSize(size);
     DemoDiagnostics.log(
       'performance',
       'gesture=$_gestures drag=${_drag.toStringAsFixed(1)} profile=${size.width.toInt()}',
@@ -107,7 +100,7 @@ class _PerformanceTestPageState extends State<PerformanceTestPage> {
                 child: Text(
                   'gestures=$_gestures\n'
                   'drag=${_drag.toStringAsFixed(1)}\n'
-                  'design=${ScreenSizeUtils.instance.designSize.width.toInt()}',
+                  'design=${DesignSize.of(context).config.designSize.width.toInt()}',
                   textAlign: TextAlign.center,
                 ),
               ),
