@@ -1,9 +1,9 @@
 import 'package:flutter/widgets.dart';
 
-/// 描述当前子树的局部适配状态。
+/// 描述当前子树的窗口适配快照和局部回退状态。
 ///
-/// 这层状态只记录 `UnscaledZone` 已经在当前子树生效到什么阶段，
-/// 以及恢复原始上下文所需的基准 `MediaQueryData`。
+/// 局部组件只通过这层状态读取原始/适配指标，不直接访问全局控制器。
+/// `paintUnscaled` 和 `layoutUnscaled` 记录 `UnscaledZone` 已生效的阶段。
 @immutable
 class AdaptScopeState {
   const AdaptScopeState({

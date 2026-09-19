@@ -6,6 +6,7 @@
 library screen_adapt;
 
 export 'src/core/bindings.dart';
+export 'src/core/adapt_metrics.dart';
 export 'src/core/screen_metrics.dart';
 export 'src/widgets/design_size_scope.dart';
 export 'src/widgets/unscaled_zone.dart';

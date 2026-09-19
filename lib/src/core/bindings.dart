@@ -32,6 +32,10 @@ import 'package:screen_adapt/src/widgets/design_size_scope.dart';
 /// 注意：mixin 中的 `wrapWithDefaultView` 与 `createViewConfigurationFor` 不会调用
 /// super，因此 `DesignSizeBindingMixin` 必须放在 `with` 列表的最后，否则会被覆盖。
 mixin DesignSizeBindingMixin on WidgetsFlutterBinding {
+  AdaptController get _adaptController => ScreenSizeUtils.instance.controller;
+
+  double get _adaptedDpr =>
+      _adaptController.metrics?.adapted.devicePixelRatio ?? 1.0;
   static Size? _pendingDesignSize;
   static ScreenAdaptType _pendingAdaptType = ScreenAdaptType.min;
   static bool _pendingScaleText = true;
@@ -60,7 +64,7 @@ mixin DesignSizeBindingMixin on WidgetsFlutterBinding {
     if (view.physicalSize.isEmpty ||
         !view.devicePixelRatio.isFinite ||
         view.devicePixelRatio <= 0) {
-      final previousDpr = ScreenSizeUtils.instance.data.devicePixelRatio;
+      final previousDpr = _adaptedDpr;
       final fallbackDpr = previousDpr.isFinite && previousDpr > 0
           ? previousDpr
           : ScreenSizeUtils.defaultScale;
@@ -70,14 +74,12 @@ mixin DesignSizeBindingMixin on WidgetsFlutterBinding {
         devicePixelRatio: fallbackDpr,
       );
     }
-    ScreenSizeUtils.instance.setup();
     final BoxConstraints physicalConstraints =
         BoxConstraints.fromViewConstraints(view.physicalConstraints);
-    final double devicePixelRatio =
-        ScreenSizeUtils.instance.data.devicePixelRatio;
+    final double devicePixelRatio = _adaptedDpr;
     debugPrint('[screen_adapt][view_config] view=${view.viewId} '
         'physical=${view.physicalSize} logical=${physicalConstraints / devicePixelRatio} '
-        'dpr=$devicePixelRatio scale=${ScreenSizeUtils.instance.scale}');
+        'dpr=$devicePixelRatio scale=${_adaptController.metrics?.scale ?? 1}');
     return ViewConfiguration(
       physicalConstraints: physicalConstraints,
       logicalConstraints: physicalConstraints / devicePixelRatio,
@@ -115,6 +117,7 @@ mixin DesignSizeBindingMixin on WidgetsFlutterBinding {
         PlatformDispatcher.instance.onPointerDataPacket;
     super.initInstances();
     PlatformDispatcher.instance.onPointerDataPacket = _handlePointerDataPacket;
+    _adaptController.addListener(_updateAdaptedViews);
   }
 
   ui.PointerDataPacketCallback? _previousPointerDataPacketCallback;
@@ -136,7 +139,7 @@ mixin DesignSizeBindingMixin on WidgetsFlutterBinding {
           debugPrint('[screen_adapt][pointer] type=${event.runtimeType} '
               'view=${event.viewId} position=${event.position} '
               'local=${event.localPosition} dpr=${_getAdaptedDevicePixelRatio(event.viewId)} '
-              'scale=${ScreenSizeUtils.instance.scale}');
+              'scale=${_adaptController.metrics?.scale ?? 1}');
         }
         _pendingPointerEvents.add(event);
       }
@@ -165,7 +168,7 @@ mixin DesignSizeBindingMixin on WidgetsFlutterBinding {
     // 如果是主视图（或者是我们正在适配的视图），应用缩放比例
     // 通常 implicitView 是我们要适配的对象
     if (viewId == platformDispatcher.implicitView?.viewId) {
-      return ScreenSizeUtils.instance.data.devicePixelRatio;
+      return _adaptedDpr;
     }
 
     return view.devicePixelRatio;
@@ -187,14 +190,23 @@ mixin DesignSizeBindingMixin on WidgetsFlutterBinding {
     }
   }
 
+  bool _handlingDeviceMetrics = false;
+
+  void _updateAdaptedViews() {
+    if (_handlingDeviceMetrics) return;
+    for (final renderView in renderViews) {
+      renderView.configuration = createViewConfigurationFor(renderView);
+    }
+  }
+
   @override
   void handleMetricsChanged() {
-    super.handleMetricsChanged();
-    // 屏幕参数改变时，重新计算缩放并通知渲染树
-    ScreenSizeUtils.instance.setup();
-    // 强制更新 RenderView 的配置
-    for (var renderView in renderViews) {
-      renderView.configuration = createViewConfigurationFor(renderView);
+    _handlingDeviceMetrics = true;
+    try {
+      ScreenSizeUtils.instance.setup();
+      super.handleMetricsChanged();
+    } finally {
+      _handlingDeviceMetrics = false;
     }
   }
 }
