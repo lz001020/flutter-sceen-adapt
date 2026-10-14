@@ -1,15 +1,19 @@
 import 'dart:io';
-import 'dart:ui';
 
-import 'package:example/page1.dart';
-import 'package:example/page2.dart';
+import 'package:example/app/home_page.dart';
+import 'package:example/pages/input/pointer_events_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:screen_adapt/screen_adapt.dart';
-
+import 'package:design_scale/design_scale.dart';
 
 void main() {
-  DesignSizeWidgetsFlutterBinding.ensureInitialized(const Size(375, 667));
+  DesignSizeWidgetsFlutterBinding.ensureInitialized(
+    const Size(375, 667),
+    scaleText: true,
+    supportSystemTextScale: const bool.fromEnvironment(
+        'SUPPORT_SYSTEM_TEXT_SCALE',
+        defaultValue: false),
+  );
   if (Platform.isAndroid) {
     SystemChrome.setSystemUIOverlayStyle(
         const SystemUiOverlayStyle(statusBarColor: Colors.transparent));
@@ -26,11 +30,15 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         appBarTheme: const AppBarTheme(centerTitle: false),
+        scaffoldBackgroundColor: const Color(0xFFF7F3EA),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF123458),
+          surface: const Color(0xFFF7F3EA),
+        ),
       ),
-      initialRoute: "/page1",
+      home: const HomePage(),
       routes: {
-        "/page1": (context) => const Page1(),
-        "/page2": (context) => const Page2()
+        '/pointer_demo': (context) => const PointerTestPage(),
       },
     );
   }

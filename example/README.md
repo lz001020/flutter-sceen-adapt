@@ -1,16 +1,14 @@
-# example
+# 核心功能实验室
 
-A new Flutter project.
+```sh
+flutter pub get
+flutter run
+flutter test
+```
 
-## Getting Started
+页面：窗口与横竖屏、字体与系统缩放、键盘与安全区、指针与手势。
+设计稿切换为 320 / 375 / 768，保留启动时字体配置。
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+example 只依赖核心包；ScreenUtil 对照和性能路由已迁入 ../benchmark。
+局部反适配及原生视图示例已归档，Android 宿主不再注册测试 PlatformView。
+设备回归步骤见 [TESTING.md](TESTING.md)。
