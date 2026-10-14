@@ -1,0 +1,21 @@
+name: screen_adapt
+description: "A Flutter screen adaptation solution based on binding-level logical coordinate remapping."
+homepage: https://github.com/lz001020/flutter-sceen-adapt
+repository: https://github.com/lz001020/flutter-sceen-adapt
+issue_tracker: https://github.com/lz001020/flutter-sceen-adapt/issues
+version: 0.1.0
+
+environment:
+  sdk: ^3.0.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
