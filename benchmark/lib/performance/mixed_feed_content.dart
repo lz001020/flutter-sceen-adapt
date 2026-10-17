@@ -242,7 +242,7 @@ class _TrendPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = color.withValues(alpha: 0.2);
+    final paint = Paint()..color = color.withAlpha(51);
     for (var i = 0; i < 12; i++) {
       final height = size.height * (0.2 + ((i * 7 + seed) % 11) / 15);
       canvas.drawRRect(
