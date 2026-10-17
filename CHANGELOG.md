@@ -1,6 +1,6 @@
 ## 0.2.0
 
-Breaking changes (release preparation; not yet published):
+Breaking changes:
 
 - Rename the package to design_scale and the public entry to design_scale.dart.
 
