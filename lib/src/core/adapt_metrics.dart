@@ -35,8 +35,7 @@ abstract final class AdaptCalculator {
     bool rotateDimensionsInLandscape = true,
     double? scaleOverride,
   }) {
-    final scale =
-        scaleOverride ??
+    final scale = scaleOverride ??
         _calculateScale(
           config: config,
           originSize: origin.size,

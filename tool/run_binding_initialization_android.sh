@@ -1,12 +1,12 @@
 #!/bin/zsh
-# Builds and installs smoke-test example APKs; does not publish or clear logcat.
+# Builds and installs smoke-test demo APKs; does not publish or clear logcat.
 set -euo pipefail
 repo_dir="${0:A:h:h}"
 device_id="${1:?Usage: zsh tool/run_binding_initialization_android.sh <device-id>}"
 run_stamp="$(date +%Y%m%d%H%M%S)-$$"
 result_dir="$repo_dir/build/binding-initialization-$run_stamp"
 mkdir -p "$result_dir"
-cd "$repo_dir/example"
+cd "$repo_dir/demo"
 for mode in profile release; do
   for scenario in repeat conflict; do
     run_id="$run_stamp-$mode-$scenario"
@@ -21,9 +21,9 @@ for mode in profile release; do
       tail -n 60 "$build_log"
       exit 1
     fi
-    adb -s "$device_id" shell am force-stop com.example.example
+    adb -s "$device_id" shell am force-stop dev.designscale.regression
     adb -s "$device_id" install -r "build/app/outputs/flutter-apk/app-$mode.apk"
-    adb -s "$device_id" shell am start -W -n com.example.example/.MainActivity
+    adb -s "$device_id" shell am start -W -n dev.designscale.regression/.MainActivity
     passed=0
     for attempt in {1..30}; do
       adb -s "$device_id" logcat -d -v brief \

@@ -3,12 +3,12 @@
 set -euo pipefail
 
 repo_dir="${0:A:h:h}"
-benchmark_dir="$repo_dir/benchmark"
+demo_dir="$repo_dir/demo"
 device_id="${1:-emulator-5554}"
-package_name="dev.screenadapt.benchmark"
+package_name="dev.designscale.regression"
 component_name="$package_name/$package_name.MainActivity"
 report_dir="$repo_dir/build/performance"
-apk_path="$benchmark_dir/build/app/outputs/flutter-apk/app-profile.apk"
+apk_path="$demo_dir/build/app/outputs/flutter-apk/app-profile.apk"
 max_p90_us="${PERF_MAX_P90_US:-16667}"
 max_janky_percent="${PERF_MAX_JANK_PERCENT:-5}"
 
@@ -21,8 +21,8 @@ mkdir -p "$report_dir"
 
 if [[ "${PERF_SKIP_BUILD:-0}" != "1" ]]; then
   (
-    cd "$benchmark_dir"
-    flutter build apk --profile
+    cd "$demo_dir"
+    flutter build apk --profile --target=lib/performance_main.dart
   )
 fi
 

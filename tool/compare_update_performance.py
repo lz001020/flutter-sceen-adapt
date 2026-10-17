@@ -15,9 +15,9 @@ import urllib.request
 from android_display_state import capture_portrait
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-BENCHMARK = ROOT / 'benchmark'
-APK = BENCHMARK / 'build/app/outputs/flutter-apk/app-profile.apk'
-PACKAGE = 'dev.screenadapt.benchmark'
+DEMO = ROOT / 'demo'
+APK = DEMO / 'build/app/outputs/flutter-apk/app-profile.apk'
+PACKAGE = 'dev.designscale.regression'
 COMPONENT = f'{PACKAGE}/{PACKAGE}.MainActivity'
 MARKER = '[demo:update_benchmark] '
 VARIANTS = ('designConst', 'designDynamic',
@@ -94,7 +94,7 @@ def run_case(device, directory, round_number, scenario, variant,
             f'--dart-define=PERF_SCENARIO={scenario}',
             f'--dart-define=PERF_DIAGNOSTICS={str(diagnostics).lower()}',
             f'--dart-define=PERF_ISOLATE_PAINT={str(isolate_paint).lower()}',
-            cwd=BENCHMARK, timeout=600, output=build_log)
+            cwd=DEMO, timeout=600, output=build_log)
     adb(device, 'install', '-r', str(APK), timeout=120)
     adb(device, 'shell', 'am', 'force-stop', PACKAGE)
     adb(device, 'logcat', '-c')

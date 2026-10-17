@@ -5,7 +5,11 @@ build/
 example/.dart_tool/
 example/build/
 example/.idea/
-docs/
+/doc/README.md
+/doc/architecture.md
+/doc/performance-validation.md
+/doc/release-checklist.md
+/doc/roadmap.md
 .ai/
 example/img*.png
 /img.png
@@ -14,6 +18,7 @@ example/img*.png
 /CONTRIBUTING.md
 
 archive/
-benchmark/
 tool/
 .local-archive/
+*.log
+demo/

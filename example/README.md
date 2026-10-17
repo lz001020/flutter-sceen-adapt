@@ -1,24 +1,21 @@
-# 核心功能实验室
+# 咖啡下单示例
 
-在仓库的 `example/` 目录执行，目标为 Android 设备或 iOS 模拟器：
+一个本地交互页面，展示如何用 design_scale 按设计稿尺寸编写业务 UI。
 
 ```sh
+cd example
 flutter pub get
-flutter run
-flutter test
+flutter run -d <device-id>
 ```
 
-默认设计尺寸 375×667，使用 `min` 策略，字体随设计坐标缩放。
-实验室默认关闭系统字号跟随（库本身默认开启），便于分别观察两种策略。
-启用系统字号跟随：
+在 Android 设备或 iOS 模拟器运行。选择温度、调整数量、填写备注并确认订单；不调用网络或支付服务。
 
-```sh
-flutter run -d <device-id> --dart-define=SUPPORT_SYSTEM_TEXT_SCALE=true
-```
+阅读 [lib/main.dart](lib/main.dart)：
 
-页面：窗口与横竖屏、字体与系统缩放、键盘与安全区、指针与手势。
-设计稿切换为 320 / 375 / 768，保留启动时字体配置。
+- 在 `runApp` 前初始化 binding，设计稿为 375×812，使用 width 策略并跟随系统字号。
+- 间距、圆角、字号直接使用设计稿数值，无需逐项换算。
+- 静态商品组件使用 `const`，订单状态只由普通 StatefulWidget 管理。
+- 用 `SafeArea`、可滚动表单和 Scaffold 的键盘避让处理可用空间。
 
-example 只依赖核心包；ScreenUtil 对照和性能路由已迁入 ../benchmark。
-局部反适配及原生视图示例已归档，Android 宿主不再注册测试 PlatformView。
-设备回归步骤见 [TESTING.md](TESTING.md)。
+全局缩放不等于响应式布局；横屏和短屏通过滚动访问内容，本示例不演示平板多栏布局。
+Widget 测试验证订单交互；真实 binding、旋转和原生输入回归位于 [demo](https://github.com/lz001020/flutter-sceen-adapt/blob/HEAD/demo/README.md)，性能对照位于 [demo 性能入口](https://github.com/lz001020/flutter-sceen-adapt/blob/HEAD/demo/PERFORMANCE.md)。这些维护者工程不随 pub 包发布。

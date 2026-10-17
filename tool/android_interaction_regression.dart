@@ -1,4 +1,4 @@
-// Device-only regression entry point, hosted by example in profile/release.
+// Device-only regression entry point, hosted by demo in profile/release.
 import 'dart:convert';
 import 'dart:ui' as ui;
 
@@ -11,7 +11,12 @@ const _iosNative = bool.fromEnvironment('IOS_NATIVE_REGRESSION');
 final _nativeState = ValueNotifier<String>('waiting');
 int _sequence = 0;
 void emit(String type, Map<String, Object?> data) {
-  final encoded = jsonEncode({'run': _run, 'type': type, ...data});
+  final encoded = jsonEncode({
+    'run': _run,
+    'type': type,
+    'timeMs': DateTime.now().millisecondsSinceEpoch,
+    ...data,
+  });
   debugPrintSynchronously('[screen_adapt:regression] $encoded');
   if (_iosNative && ['action', 'done', 'failure'].contains(type)) {
     _nativeState.value = encoded;
@@ -59,9 +64,9 @@ void main() {
     type: ScreenAdaptType.width,
   );
   FlutterError.onError = (details) => emit('failure', {
-    'error': details.exceptionAsString(),
-    'stack': '${details.stack}',
-  });
+        'error': details.exceptionAsString(),
+        'stack': '${details.stack}',
+      });
   runApp(
     const MaterialApp(home: PopScope(canPop: false, child: RegressionPage())),
   );
@@ -95,11 +100,13 @@ class _RegressionPageState extends State<RegressionPage> {
   }
 
   void recordPointer(PointerEvent event) {
-    if (event is PointerDownEvent) {
-      pointerDown = event.position;
+    if (event is PointerDownEvent) pointerDown = event.position;
+    if (event is PointerDownEvent || event is PointerUpEvent) {
       pointerTrace.add(
-        '${event.kind} device=${event.device} ${event.position}',
+        '${event is PointerDownEvent ? 'down' : 'up'} '
+        'pointer=${event.pointer} x=${event.position.dx} y=${event.position.dy}',
       );
+      emit('pointer', {'event': pointerTrace.last});
     }
   }
 
@@ -146,11 +153,7 @@ class _RegressionPageState extends State<RegressionPage> {
     );
     check(
       WidgetsBinding
-              .instance
-              .renderViews
-              .single
-              .configuration
-              .devicePixelRatio ==
+              .instance.renderViews.single.configuration.devicePixelRatio ==
           dpr,
       'Rendering DPR differs from root MediaQuery.',
     );
@@ -171,7 +174,15 @@ class _RegressionPageState extends State<RegressionPage> {
     pointerTrace.clear();
     final physical = logical * observed.devicePixelRatio;
     request('tap', {'x': physical.dx.round(), 'y': physical.dy.round()});
-    await waitFor(() => pointerDown != null && done(), 'physical tap $logical');
+    await waitFor(
+      () => pointerDown != null && done(),
+      'physical tap x=${physical.dx} y=${physical.dy}',
+    ).catchError((Object error) {
+      throw StateError(
+        '$error; dpr=${observed.devicePixelRatio} taps=$taps '
+        'trace=$pointerTrace',
+      );
+    });
     check(
       (pointerDown! - logical).distance < 1.5,
       'Physical tap mapped to an unexpected logical position: '

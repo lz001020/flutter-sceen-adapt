@@ -69,9 +69,8 @@ mixin DesignSizeBindingMixin on WidgetsFlutterBinding {
         !view.devicePixelRatio.isFinite ||
         view.devicePixelRatio <= 0) {
       final previousDpr = _adaptedDpr;
-      final fallbackDpr = previousDpr.isFinite && previousDpr > 0
-          ? previousDpr
-          : 1.0;
+      final fallbackDpr =
+          previousDpr.isFinite && previousDpr > 0 ? previousDpr : 1.0;
       return ViewConfiguration(
         physicalConstraints: BoxConstraints.tight(Size.zero),
         logicalConstraints: BoxConstraints.tight(Size.zero),

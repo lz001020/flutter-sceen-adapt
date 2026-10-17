@@ -14,10 +14,11 @@ Breaking changes (release preparation; not yet published):
 - Require positive finite design sizes; invalid configuration throws before
   state changes. Preserve valid snapshots through transient invalid metrics.
 - Notify enable changes even at scale 1; refresh snapshots on system font changes.
-- Move performance experiments and ScreenUtil dependency to benchmark/ with
-  separate Android/iOS application identifiers and build output.
-- Require Flutter >=3.22.0 and Dart >=3.4.0; core, example and benchmark are
-  validated using Flutter 3.22.3 / Dart 3.4.4. Device checks use Flutter 3.35.7.
+- Consolidate the benchmark host into demo/ alongside behavior regressions;
+  keep independent performance entry points and update scripts and CI paths.
+  Historical device measurements retain their original host conditions.
+- Require Flutter >=3.22.0 and Dart >=3.4.0; compatibility checks use
+  Flutter 3.22.3 and 3.35.7. Device checks use Flutter 3.35.7.
 - Restrict binding configuration and pointer diagnostics to debug mode.
 - Document initialization, controller ownership, font policy and validation
   boundaries in the bundled doc/ guides. Correct the custom binding example

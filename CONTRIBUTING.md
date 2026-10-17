@@ -17,23 +17,23 @@
 
 从当前代码创建分支，围绕一个具体问题修改。修复行为缺陷时添加能复现该缺陷的测试；仅修改文档时检查链接、命令和 API 是否一致即可，不要求重复设备回归。
 
-GitHub CI 在 push 和 Pull Request 时使用 Flutter 3.22.3、3.35.7，分别检查核心库、example 和 benchmark 的分析与测试。格式检查和 pub dry-run 统一使用 Flutter 3.35.7（Dart 3.9.2）；本地格式化与完整发布预检也使用该版本。
+GitHub CI 在 push 和 Pull Request 时使用 Flutter 3.22.3、3.35.7，分别检查核心库、example 和 demo 的分析与测试。格式检查和 pub dry-run 统一使用 Flutter 3.35.7（Dart 3.9.2）；本地格式化与完整发布预检也使用该版本。
 
 ```sh
 flutter pub get
 flutter analyze
 flutter test
 (cd example && flutter pub get && flutter analyze && flutter test)
-(cd benchmark && flutter pub get && flutter analyze && flutter test)
-dart format --output=none --set-exit-if-changed lib test example/lib example/test benchmark/lib benchmark/test
+(cd demo && flutter pub get && flutter analyze && flutter test)
+dart format --output=none --set-exit-if-changed lib test example/lib example/test demo/lib demo/test
 git diff --check
 flutter pub publish --dry-run
 ```
 
-涉及 binding 初始化、指针、键盘或设备指标时，按 [核心测试规范](doc/testing.md)与 [移动端回归](example/TESTING.md)选择相关设备检查。没有设备时如实注明未验证范围，不伪称通过。发布预检为 `zsh tool/check_release.sh`，只执行 dry-run，不上传。
+涉及 binding 初始化、指针、键盘或设备指标时，按 [核心测试规范](doc/testing.md)与 [移动端回归](demo/TESTING.md)选择相关设备检查。没有设备时如实注明未验证范围，不伪称通过。发布预检为 `zsh tool/check_release.sh`，只执行 dry-run，不上传。
 
 ## 提交 Pull Request
 
 说明具体问题、修改后行为、验证命令与结果，以及剩余限制。公共行为改变需要同步 README/使用指南与 CHANGELOG。保留失败证据；不要将测试日志、APK、个人资料或本机路径配置提交到仓库。
 
-当前设备证据见 [最终复核](docs/performance-final-20261015.md)。提交贡献即表示你有权按本项目 [MIT 许可证](LICENSE)提供这些内容。
+当前设备证据见 [最终复核](doc/performance-validation.md)。提交贡献即表示你有权按本项目 [MIT 许可证](LICENSE)提供这些内容。

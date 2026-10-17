@@ -9,16 +9,15 @@ class AdaptRoot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => AdaptControllerScope(
-    controller: controller,
-    child: Builder(
-      builder: (context) {
-        final current = AdaptController.of(context);
-        final data =
-            current.metrics?.adapted ??
-            MediaQuery.maybeOf(context) ??
-            const MediaQueryData();
-        return MediaQuery(data: data, child: child);
-      },
-    ),
-  );
+        controller: controller,
+        child: Builder(
+          builder: (context) {
+            final current = AdaptController.of(context);
+            final data = current.metrics?.adapted ??
+                MediaQuery.maybeOf(context) ??
+                const MediaQueryData();
+            return MediaQuery(data: data, child: child);
+          },
+        ),
+      );
 }

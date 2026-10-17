@@ -105,17 +105,17 @@ class AdaptController extends ChangeNotifier {
     final next = origin == null
         ? null
         : !_enabled || _config.designSize.isEmpty
-        ? AdaptMetrics(
-            config: _config,
-            origin: origin,
-            adapted: origin,
-            scale: 1,
-          )
-        : AdaptCalculator.calculate(
-            config: _config,
-            origin: origin,
-            isLandscape: origin.size.width > origin.size.height,
-          );
+            ? AdaptMetrics(
+                config: _config,
+                origin: origin,
+                adapted: origin,
+                scale: 1,
+              )
+            : AdaptCalculator.calculate(
+                config: _config,
+                origin: origin,
+                isLandscape: origin.size.width > origin.size.height,
+              );
     _metrics = next;
     notifyListeners();
   }

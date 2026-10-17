@@ -34,7 +34,7 @@ def main():
                            '--dart-define=REGRESSION_RUN=' + run,
                            '--dart-define=REGRESSION_CONFLICT=' +
                            ('true' if scenario == 'conflict' else 'false')]
-                process = subprocess.Popen(command, cwd=ROOT / 'example',
+                process = subprocess.Popen(command, cwd=ROOT / 'demo',
                                            stdout=subprocess.PIPE,
                                            stderr=subprocess.STDOUT,
                                            stdin=subprocess.PIPE, text=True,

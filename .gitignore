@@ -1,10 +1,11 @@
 # Miscellaneous
 # Local personal archive: resumes, interview preparation and learning notes.
 /archive/personal/
+/archive/project-notes/
+/docs/android_flutter_apm_80_20_plan.md
 /.local-archive/
 /.ai/
 /text.txt
-/tool/picker_cache/
 *.class
 *.lock
 *.log

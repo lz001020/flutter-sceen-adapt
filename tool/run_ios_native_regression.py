@@ -41,7 +41,7 @@ def main():
             print('Testing:', device, flush=True)
             try:
                 with (output / (device + '.log')).open('w') as log:
-                    subprocess.run(command, cwd=ROOT / 'example/ios',
+                    subprocess.run(command, cwd=ROOT / 'demo/ios',
                                    stdout=log, stderr=subprocess.STDOUT,
                                    check=True, timeout=900)
                 report['result'] = 'passed'

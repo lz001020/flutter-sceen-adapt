@@ -44,9 +44,9 @@ def main():
               'diagnostics': args.diagnostics, 'updatesOnly': args.updates_only,
               'isolatePaint': args.isolate_paint, 'requestedScenarios': args.scenarios}
     paths = sorted(set(list(ROOT.glob('lib/**/*.dart'))
-                       + list(ROOT.glob('benchmark/lib/**/*.dart'))
+                       + list(ROOT.glob('demo/lib/**/*.dart'))
                        + list(ROOT.glob('tool/*performance*'))
-                       + [ROOT / 'tool/android_display_state.py', ROOT / 'benchmark/pubspec.lock']))
+                       + [ROOT / 'tool/android_display_state.py', ROOT / 'demo/pubspec.lock']))
     manifest = {str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
                 for p in paths if p.is_file()}
     (directory / 'source-manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')

@@ -5,7 +5,7 @@
 ## 坐标与策略
 
 `width` 按有效设备宽度与设计宽度计算比例；`height` 按有效高度与设计高度计算；
-`min` 按两者短边计算。延续原有移动端公式：设备横屏时先交换设备宽高参与计算。
+`min` 按两者短边计算。设备横屏时先交换设备宽高参与计算。
 设计稿自身为横屏时也使用此规则，接入前应验证期望布局。
 
 `AdaptConfig` 默认 `width`，内置 binding 初始化及 mixin 配置默认 `min`。
@@ -31,13 +31,13 @@
 | maybeOf(context) | 订阅，可返回 null |
 | read(context) | 一次性读取，不订阅 |
 | config / metrics / enabled | 只读配置、可空快照及开关 |
-| configure(config) | 原子替换配置并启用适配；相同配置幂等 |
+| configure(config) | 原子替换配置并启用适配；已启用时重复应用相同配置不通知 |
 | setDesignSize(size) | 保留策略和字体设置，修改设计尺寸并启用 |
 | setEnabled(value) | 保留配置，关闭时恢复原始坐标；重复值不通知 |
 | addListener / removeListener | 订阅状态变化；使用方负责退订 |
 
 从上下文获得的 Controller 由 binding 持有，业务不要 dispose。
-独立构造的 Controller 由创建者 dispose，必须传有效配置；设备输入仅供库内部测试和 binding 使用。
+独立构造的 Controller 由创建者 dispose，且不会自动获取设备指标。设计尺寸必须为有限正数，否则抛出 `ArgumentError`，已有状态保持不变。
 无 view 时快照清空；瞬时无效尺寸/DPR 保留上次有效快照。
 
 ## 组合 binding
@@ -54,11 +54,6 @@ void main() {
 
 只创建一次，适配 mixin 放在组合列表最后；它接管 view 配置和根包装。
 上例直接调用构造函数创建自定义 binding；Dart 静态初始化方法不会被子类继承。
-组合并不保证任意插件兼容，尤其应检查其他 mixin 是否依赖被覆盖的根包装或 view 配置。
+组合其他 mixin 时，检查它们对根包装和 view 配置的覆盖是否冲突。
 不要先创建普通 WidgetsFlutterBinding 再初始化适配 binding。
 重复调用内置 ensureInitialized 会复用 binding 并应用传入配置。
-
-## 已移除扩展
-
-当前没有局部反适配或 PlatformView 自动补偿 API，迁移方式见 [0.2 迁移说明](migration-0.2.md)。
-不要继续导入 archive 或 lib/src 来替代已移除的公开接口。

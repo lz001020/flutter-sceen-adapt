@@ -3,12 +3,12 @@
 set -euo pipefail
 
 repo_dir="${0:A:h:h}"
-benchmark_dir="$repo_dir/benchmark"
+demo_dir="$repo_dir/demo"
 device_id="${1:-emulator-5554}"
-package_name="dev.screenadapt.benchmark"
+package_name="dev.designscale.regression"
 component_name="$package_name/$package_name.MainActivity"
 report_dir="$repo_dir/build/performance"
-apk_path="$benchmark_dir/build/app/outputs/flutter-apk/app-profile.apk"
+apk_path="$demo_dir/build/app/outputs/flutter-apk/app-profile.apk"
 
 if ! adb -s "$device_id" get-state >/dev/null 2>&1; then
   print -u2 "设备不可用: $device_id"
@@ -28,7 +28,7 @@ run_case() {
   local report="$report_dir/${device_id}_${engine}_rebuild.txt"
 
   (
-    cd "$benchmark_dir"
+    cd "$demo_dir"
     flutter build apk --profile --target "$target"
   )
   adb -s "$device_id" install -r "$apk_path" >/dev/null

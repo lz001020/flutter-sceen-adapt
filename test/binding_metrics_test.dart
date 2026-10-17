@@ -5,7 +5,7 @@ import 'package:design_scale/design_scale.dart';
 
 class DeviceDispatcher extends TestPlatformDispatcher {
   DeviceDispatcher()
-    : super(platformDispatcher: ui.PlatformDispatcher.instance);
+      : super(platformDispatcher: ui.PlatformDispatcher.instance);
   bool missing = false;
   @override
   TestFlutterView? get implicitView => missing ? null : super.implicitView;

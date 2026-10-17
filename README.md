@@ -1,32 +1,32 @@
 # design_scale
 
-面向 Android / iOS 单窗口 Flutter 应用的全局设计稿坐标适配库。
-通过 binding 同步转换布局 DPR、MediaQuery 与指针坐标，业务组件可直接使用设计稿尺寸。
-当前版本只维护核心适配；局部反适配、原生视图补偿、物理像素区域和 ScreenUtil 迁移扩展不属于当前 API。
+面向 Android / iOS 单窗口 Flutter 应用的设计稿坐标适配库。
+在应用入口统一配置设计尺寸，业务组件直接使用设计稿中的间距、字号和宽高。
 
-## 适合什么场景
+```dart
+const Padding(
+  padding: EdgeInsets.all(24),
+  child: SizedBox(
+    width: 160,
+    height: 48,
+    child: Center(child: Text('立即下单', style: TextStyle(fontSize: 16))),
+  ),
+)
+```
 
-适合希望统一使用设计稿尺寸、减少逐项尺寸换算的单窗口应用。组件可以保留常量尺寸表达，并使用 Flutter 的 const 子树复用；ScreenUtil 合理封装同样可以复用子树，因此不承诺普遍性能领先。
+## 特点
 
-采用前应在目标设备验证原生视图、插件和系统字号行为。真机基准存在场景与轮次差异，不能把构建次数减少直接等同于帧耗时下降；设备证据和未解决问题见 [性能验证](https://github.com/lz001020/flutter-sceen-adapt/blob/HEAD/docs/performance-validation.md)。
+- **直接写设计尺寸**：在根视图统一映射布局、MediaQuery 与指针坐标，减少逐项尺寸换算。
+- **保留 const 表达**：静态布局可使用常量尺寸和 const 组件，配合 Flutter 的子树复用机制。
+- **配置集中管理**：支持按宽度、按高度、按短边（min）三种策略，以及字体缩放、运行时设计尺寸切换和适配启停。
 
-## 原理与性能
-
-**核心价值是按设计稿坐标书写布局、减少逐处尺寸换算，并让常量布局更容易保留；不以普遍快于 ScreenUtil 为承诺。**
-
-- **转换位置不同。** ScreenUtil 通常通过 `.w`、`.h`、`.sp` 在业务构建时换算具体尺寸；design_scale 在根视图统一调整有效 DPR 与逻辑约束，并同步 MediaQuery 和指针坐标。倍率随设备指标或配置变化更新，普通父级重建不需要逐个业务尺寸调用换算。它改变坐标映射，不减少屏幕真实像素或自动降低绘制工作量。
-- **潜在收益来自减少重复构建。** 业务可直接写 `const SizedBox(width: 100, height: 48)`。当父级再次返回同一个 Widget 实例时，Flutter 可以跳过该处由父级更新引起的重复更新；子树仍可能因自身状态或依赖变化重建。收益取决于实际跳过的工作，不能只用少了多少次尺寸乘法解释。
-- **复用不是本库独有。** ScreenUtil 也可通过 `const` 封装组件、内部尺寸换算及稳定的 `child` 复用静态子树，并正确响应窗口变化。两边都合理优化后，页面变复杂不一定扩大库间差距；`const` 也不意味着免除布局、重绘或图片解码。
-
-2026-10-15 小米 14 竖屏 Profile 的复杂图文父级更新专项中，两库优化组均将每轮复杂卡片 build 从 2160 次降为 0；相对各自动态写法，UI p90 下降约 61%–64%，整帧 total p90 下降约 15%–16%。这证明复杂静态子树的复用收益，**不是 design_scale 相对 ScreenUtil 的加速比例**。两库优化组耗时接近，逐轮快慢方向变化，未证明稳定领先。
-
-该专项使用 12 张全部挂载、图片已预缓存的本地图文卡片，不代表首次图片解码或虚拟化长列表。vivo 快速滚动的 raster 长帧波动仍未解决，不据此宣称所有设备无性能回退；开发工时收益也尚未量化。测试方法与完整边界见 [核心测试与验证](doc/testing.md)，逐轮数据见 [发布前性能复核](https://github.com/lz001020/flutter-sceen-adapt/blob/HEAD/docs/performance-final-20261015.md)。
+适合以统一设计稿为基础的移动端应用。全局缩放负责坐标映射；页面内容重排、平板多栏等响应式布局仍由业务实现。
 
 ## 接入
 
-要求 Flutter >=3.22.0、Dart >=3.4.0。核心库、example 和 benchmark 已在 Flutter 3.22.3 / Dart 3.4.4 上通过分析与测试；设备回归记录使用 Flutter 3.35.7 / Dart 3.9.2。
+要求 Flutter >=3.22.0、Dart >=3.4.0。
 
-当前为 0.2.0 首次发布准备，尚未上传 pub.dev。发布前可在应用的 `pubspec.yaml` 中使用本地路径：
+当前版本为 0.2.0，尚未发布到 pub.dev。克隆仓库后，在应用的 `pubspec.yaml` 中添加本地依赖：
 
 ```yaml
 dependencies:
@@ -34,7 +34,7 @@ dependencies:
     path: ../flutter-sceen-adapt # 改成你的本地仓库路径
 ```
 
-执行 `flutter pub get` 后初始化：
+执行 `flutter pub get`，在应用入口初始化：
 
 ```dart
 import 'package:flutter/material.dart';
@@ -42,59 +42,113 @@ import 'package:design_scale/design_scale.dart';
 
 void main() {
   DesignSizeWidgetsFlutterBinding.ensureInitialized(
-    const Size(375, 667),
+    const Size(375, 812),
     type: ScreenAdaptType.width,
     scaleText: true,
     supportSystemTextScale: true,
   );
-  runApp(const MaterialApp(home: Scaffold(body: SizedBox(width: 100, height: 48))));
+  runApp(const MaterialApp(
+    home: Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: SizedBox(width: 160, height: 48, child: Text('Hello design_scale')),
+        ),
+      ),
+    ),
+  ));
 }
 ```
 
-初始化必须在 `runApp` 和其他 binding 初始化之前。根 Scope 自动挂载，不需要业务包装。
-`ensureInitialized` 的默认策略为 `min`；推荐显式指定需要的策略。
-`AdaptConfig` 构造函数默认策略为 `width`，两者默认值不同。
+初始化应早于 `runApp` 和其他 binding 初始化，无需额外包裹根组件。
+示例显式选择按宽度缩放；`ensureInitialized` 默认使用 `min` 策略。字体默认随适配缩放并跟随系统字号。
+
+## 高级用法
+
+### 选择缩放策略与字体行为
+
+初始化时通过 `type` 选择策略，运行时通过 `AdaptConfig.adaptType` 配置：
+
+| 策略 | 比例计算 |
+| --- | --- |
+| `width` | 有效设备宽度 ÷ 设计宽度 |
+| `height` | 有效设备高度 ÷ 设计高度 |
+| `min` | 设备短边 ÷ 设计短边 |
+
+设备横屏时，width / height 使用交换后的设备宽高计算。`min` 表示短边之比，适合保持短边对应的设计比例。
+
+字体可独立于界面缩放配置。例如，保留设备逻辑字号，并继续跟随用户的系统字号设置：
 
 ```dart
-// build 中订阅配置和指标变化。
-final adapt = AdaptController.of(context);
-final AdaptMetrics? metrics = adapt.metrics;
+final controller = AdaptController.read(context)!;
+controller.configure(controller.config.copyWith(
+  scaleText: false,
+  supportSystemTextScale: true,
+));
+```
 
-// 回调中读取，不建立重建依赖。
+`scaleText` 控制字体是否随设计坐标缩放；`supportSystemTextScale` 控制是否跟随系统字号，两者默认均为 `true`。
+
+### 运行时调整
+
+在事件回调中读取 Controller，切换设计稿或启停适配：
+
+```dart
 final controller = AdaptController.read(context)!;
 controller.setDesignSize(const Size(390, 844));
-controller.setEnabled(false); // 恢复设备原始坐标，保留配置
+controller.setEnabled(false); // 切回设备原始坐标，保留配置
 controller.setEnabled(true);
 ```
 
-设计尺寸必须有限且大于零。无设备快照时 `metrics` 为 null。
-业务不能注入设备指标或覆盖 scale，也不应销毁借用的 binding Controller。
+需要同时更新设计尺寸和策略时，一次应用配置：
 
-## 范围与验证
+```dart
+controller.configure(controller.config.copyWith(
+  designSize: const Size(390, 844),
+  adaptType: ScreenAdaptType.width,
+));
+```
 
-- 支持 width / height / min 策略、系统字体策略、键盘 inset、设计稿切换及启停。
-- 不承诺 Web、桌面、多窗口或任意第三方 PlatformView 兼容。
-- 指针回调被插件再次覆盖及高刷重采样仍需按接入场景验证。
-- 自动测试通过不代表移动端真机回归或发布完成，具体见发布清单。
+`configure` 和 `setDesignSize` 会启用适配；`setEnabled` 保留当前配置。从上下文获得的 Controller 由 binding 管理，无需手动释放。
 
-## 仓库导航
+### 读取适配状态
 
-- [使用说明](doc/usage.md)
-- [核心概念](doc/concepts.md)
-- [核心测试与验证](doc/testing.md)
-- [发布前性能复核](https://github.com/lz001020/flutter-sceen-adapt/blob/HEAD/docs/performance-final-20261015.md)
-- [常见问题](doc/troubleshooting.md)
-- [已知限制](doc/known-issues.md)
-- [0.2 迁移说明](doc/migration-0.2.md)
-- [发布检查](https://github.com/lz001020/flutter-sceen-adapt/blob/HEAD/docs/release-checklist.md)
-- `example/`：窗口、字体、键盘和指针功能实验室。
-- `benchmark/`：独立性能实验及 ScreenUtil 对照，不参与发布。
-- `archive/extensions/`：移除前扩展及依赖上下文的历史快照，不参与分析、测试或发布。
-- [归档索引](https://github.com/lz001020/flutter-sceen-adapt/blob/HEAD/archive/README.md)：历史资料分类及保留规则。
+在组件的 `build` 中使用 `of` 订阅配置与指标变化；事件回调中使用 `read` 一次性读取。
 
-## 运行示例与参与贡献
+```dart
+@override
+Widget build(BuildContext context) {
+  final adapt = AdaptController.of(context);
+  final metrics = adapt.metrics;
+  return Text(metrics == null
+      ? '等待窗口就绪'
+      : '当前逻辑尺寸：${metrics.adapted.size}');
+}
+```
 
-克隆仓库后连接 Android 设备或启动 iOS 模拟器：
+日常布局仍使用 `MediaQuery.sizeOf(context)` 等 Flutter API，它们已处于适配后的逻辑坐标中；`metrics.origin` 可读取适配前的设备指标。
+
+### 自定义 binding
+
+已有自定义 binding 时，通过 mixin 组合适配能力，替代内置的 `ensureInitialized` 入口：
+
+```dart
+class AppBinding extends WidgetsFlutterBinding with DesignSizeBindingMixin {}
+
+void main() {
+  DesignSizeBindingMixin.configure(
+    designSize: const Size(375, 812),
+    adaptType: ScreenAdaptType.width,
+  );
+  AppBinding();
+  runApp(const MaterialApp(home: Scaffold(body: Text('Hello design_scale'))));
+}
+```
+
+先配置，再创建唯一 binding；与其他 mixin 组合时，将适配 mixin 放在最后。更多生命周期说明见 [使用指南](doc/usage.md)。
+
+## 运行示例
+
+连接 Android 设备或启动 iOS 模拟器：
 
 ```sh
 cd example
@@ -102,6 +156,20 @@ flutter pub get
 flutter run -d <device-id>
 ```
 
-示例启动配置与系统字号选项见 [示例说明](example/README.md)。提交问题请附最小复现、Flutter/设备版本和适配配置；修改流程见 [贡献指南](https://github.com/lz001020/flutter-sceen-adapt/blob/HEAD/CONTRIBUTING.md)。
+[咖啡下单示例](example/README.md)演示设计稿布局、商品数量调整、备注输入和订单确认，代码位于 [example/lib/main.dart](example/lib/main.dart)。
+
+## 使用范围
+
+支持 Android / iOS 单窗口应用。接入原生视图（PlatformView）或接管指针回调的插件时，需要验证坐标与交互兼容性。具体问题见 [已知限制](doc/known-issues.md)。
+
+## 文档与贡献
+
+- [使用指南](doc/usage.md) · [核心概念](doc/concepts.md) · [常见问题](doc/troubleshooting.md)
+- [迁移说明](doc/migration-0.2.md) · [测试与验证](doc/testing.md)
+- [Roadmap](https://github.com/lz001020/flutter-sceen-adapt/blob/HEAD/doc/roadmap.md)
+- [性能测试方法与结果](https://github.com/lz001020/flutter-sceen-adapt/blob/HEAD/doc/performance-validation.md)
+- [贡献指南](https://github.com/lz001020/flutter-sceen-adapt/blob/HEAD/CONTRIBUTING.md) · [问题反馈](https://github.com/lz001020/flutter-sceen-adapt/issues)
+
+维护者的功能回归与性能对照统一位于 [demo/](demo/README.md)，性能场景使用独立启动入口。
 
 使用 [MIT 许可证](LICENSE)，版权归 lz001020。

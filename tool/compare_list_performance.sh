@@ -3,12 +3,12 @@
 set -euo pipefail
 
 repo_dir="${0:A:h:h}"
-benchmark_dir="$repo_dir/benchmark"
+demo_dir="$repo_dir/demo"
 device_id="${1:-emulator-5554}"
-package_name="dev.screenadapt.benchmark"
+package_name="dev.designscale.regression"
 component_name="$package_name/$package_name.MainActivity"
 report_dir="$repo_dir/build/performance"
-apk_path="$benchmark_dir/build/app/outputs/flutter-apk/app-profile.apk"
+apk_path="$demo_dir/build/app/outputs/flutter-apk/app-profile.apk"
 scroll_count="${PERF_SCROLL_COUNT:-30}"
 scroll_duration_ms="${PERF_SCROLL_DURATION_MS:-250}"
 scroll_pause_seconds="${PERF_SCROLL_PAUSE_SECONDS:-0}"
@@ -75,7 +75,7 @@ run_case() {
     )
   fi
 
-  (cd "$benchmark_dir" && "${build_command[@]}")
+  (cd "$demo_dir" && "${build_command[@]}")
   adb -s "$device_id" install -r "$apk_path" >/dev/null
   adb -s "$device_id" logcat -c
   adb -s "$device_id" shell am force-stop "$package_name"

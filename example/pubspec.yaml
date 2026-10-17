@@ -1,5 +1,5 @@
 name: example
-description: design_scale example app for behavior verification.
+description: A coffee ordering example using design_scale.
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -9,7 +9,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.8
   design_scale:
     path: ../
 

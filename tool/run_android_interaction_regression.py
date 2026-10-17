@@ -46,15 +46,15 @@ def main():
         with (output / 'build.log').open('w') as log:
             subprocess.run(['flutter', 'build', 'apk', '--' + args.mode, '--no-pub',
                             '--target=../tool/android_interaction_regression.dart',
-                            '--dart-define=REGRESSION_RUN=' + run], cwd=ROOT / 'example',
+                            '--dart-define=REGRESSION_RUN=' + run], cwd=ROOT / 'demo',
                            stdout=log, stderr=subprocess.STDOUT, check=True,
                            timeout=600)
-        adb('shell', 'am', 'force-stop', 'com.example.example')
-        print(adb('install', '-r', str(ROOT / 'example/build/app/outputs/flutter-apk' /
+        adb('shell', 'am', 'force-stop', 'dev.designscale.regression')
+        print(adb('install', '-r', str(ROOT / 'demo/build/app/outputs/flutter-apk' /
                                       f'app-{args.mode}.apk')), flush=True)
         adb('shell', 'input', 'keyevent', 'KEYCODE_WAKEUP')
         adb('shell', 'wm', 'dismiss-keyguard')
-        adb('shell', 'am', 'start', '-W', '-n', 'com.example.example/.MainActivity')
+        adb('shell', 'am', 'start', '-W', '-n', 'dev.designscale.regression/.MainActivity')
         # Activity launch completion can precede the window accepting input.
         time.sleep(2)
         handled = set()
@@ -65,7 +65,7 @@ def main():
                 windows = adb('shell', 'dumpsys', 'window')
                 focused = [line.strip() for line in windows.splitlines()
                            if 'mCurrentFocus=' in line]
-                if focused and not any('com.example.example/' in line
+                if focused and not any('dev.designscale.regression/' in line
                                        for line in focused):
                     raise RuntimeError('Test app lost foreground. Keep the device '
                                        'unlocked and do not switch apps during the run.')
@@ -92,7 +92,9 @@ def main():
                     continue
                 handled.add(event['id'])
                 action = event['action']
-                print(f"Action {event['id']}: {action}", flush=True)
+                print(f"Action {event['id']}: {action}; "
+                      f"received_ms={int(time.time() * 1000)} "
+                      f"emitted_ms={event.get('timeMs')}", flush=True)
                 if action == 'tap':
                     adb('shell', 'input', 'tap', str(event['x']), str(event['y']))
                 elif action == 'swipe':
@@ -108,6 +110,8 @@ def main():
                     setting('font_scale', event['value'])
                 else:
                     raise RuntimeError('Unknown action: ' + action)
+                print(f"Action {event['id']} completed_ms="
+                      f"{int(time.time() * 1000)}", flush=True)
             time.sleep(0.15)
         raise TimeoutError('No completion report within 240 seconds.')
     except BaseException as error:

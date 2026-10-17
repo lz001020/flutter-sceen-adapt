@@ -5,7 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:design_scale/design_scale.dart';
 
 void main() {
-  test('real binding keeps root metrics, rendering and input aligned', () async {
+  test('real binding keeps root metrics, rendering and input aligned',
+      () async {
     final binding = DesignSizeWidgetsFlutterBinding.ensureInitialized(
       const Size(375, 667),
       type: ScreenAdaptType.width,

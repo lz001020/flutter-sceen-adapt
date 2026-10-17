@@ -8,5 +8,4 @@
 Controller 是配置及运行时状态来源，Metrics 是不可变计算结果。
 `enabled` 独立于 scale：scale=1 仍可能处于开启状态，所以启停必须按 enabled 判断。
 
-局部反适配及像素语义扩展已归档，当前产品只维护全局链路。
-公式、字体和公共契约见 [使用指南](usage.md)，实现边界见 [架构](https://github.com/lz001020/flutter-sceen-adapt/blob/HEAD/docs/architecture.md)。
+公式、字体和公共契约见 [使用指南](usage.md)，实现边界见 [架构](https://github.com/lz001020/flutter-sceen-adapt/blob/HEAD/doc/architecture.md)。
