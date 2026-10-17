@@ -4,7 +4,6 @@ homepage: https://github.com/lz001020/flutter-sceen-adapt
 repository: https://github.com/lz001020/flutter-sceen-adapt
 issue_tracker: https://github.com/lz001020/flutter-sceen-adapt/issues
 version: 0.2.0
-publish_to: https://pub.dev
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
