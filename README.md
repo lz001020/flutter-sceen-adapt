@@ -165,7 +165,7 @@ flutter run -d <device-id>
 ## 文档与贡献
 
 - [使用指南](doc/usage.md) · [核心概念](doc/concepts.md) · [常见问题](doc/troubleshooting.md)
-- [迁移说明](doc/migration-0.2.md) · [测试与验证](doc/testing.md)
+- [迁移说明](doc/migration-0.2.md) · [测试与验证](https://github.com/lz001020/flutter-sceen-adapt/blob/HEAD/doc/testing.md)
 - [Roadmap](https://github.com/lz001020/flutter-sceen-adapt/blob/HEAD/doc/roadmap.md)
 - [性能测试方法与结果](https://github.com/lz001020/flutter-sceen-adapt/blob/HEAD/doc/performance-validation.md)
 - [贡献指南](https://github.com/lz001020/flutter-sceen-adapt/blob/HEAD/CONTRIBUTING.md) · [问题反馈](https://github.com/lz001020/flutter-sceen-adapt/issues)

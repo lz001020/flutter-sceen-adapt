@@ -10,6 +10,7 @@ example/.idea/
 /doc/performance-validation.md
 /doc/release-checklist.md
 /doc/roadmap.md
+/doc/testing.md
 .ai/
 example/img*.png
 /img.png

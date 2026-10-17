@@ -8,12 +8,12 @@
 - [核心概念](concepts.md)：坐标、缩放与状态。
 - [排错](troubleshooting.md) · [已知限制](known-issues.md)
 - [0.2 迁移](migration-0.2.md)
-- [测试与验证](testing.md)：测试覆盖与复验入口。
 
 ## 维护与验证
 
 以下资料保留在仓库，pub 包仅包含上述使用文档。
 
+- [测试与验证](testing.md)：测试覆盖与复验入口。
 - [架构](architecture.md)：模块职责与状态流。
 - [Roadmap](roadmap.md)：演进方向、优先级与候选能力。
 - [发布检查](release-checklist.md)：发布条件、最新工程检查与历史验收边界。

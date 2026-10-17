@@ -23,4 +23,4 @@ zsh tool/build_ios_simulator.sh example
 
 ## 提交复现信息
 
-保留 Flutter 版本、设备与系统版本、设计尺寸、缩放策略、字体配置、操作步骤及完整错误日志。测试入口见[测试与验证](testing.md)。
+保留 Flutter 版本、设备与系统版本、设计尺寸、缩放策略、字体配置、操作步骤及完整错误日志。测试入口见[测试与验证](https://github.com/lz001020/flutter-sceen-adapt/blob/HEAD/doc/testing.md)。
