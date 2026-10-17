@@ -1,4 +1,11 @@
 # Miscellaneous
+# Local personal archive: resumes, interview preparation and learning notes.
+/archive/personal/
+/archive/project-notes/
+/docs/android_flutter_apm_80_20_plan.md
+/.local-archive/
+/.ai/
+/text.txt
 *.class
 *.lock
 *.log
@@ -6,8 +13,17 @@
 *.swp
 .buildlog/
 .history
-.metadata
-
+.dart_tool
+.claude
+.idea
+.DS_Store
+.claude/
+.idea/
+.dart_tool/
+build/
+example/.dart_tool/
+example/build/
+example/.idea/
 
 # Flutter repo-specific
 /bin/cache/
@@ -33,14 +49,12 @@ analysis_benchmark.json
 
 # Flutter/Dart/Pub related
 **/doc/api/
-.dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
 **/generated_plugin_registrant.dart
 .packages
 .pub-preload-cache/
 .pub/
-build/
 flutter_*.png
 linked_*.ds
 unlinked.ds
@@ -117,3 +131,5 @@ app.*.symbols
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 !/dev/ci/**/Gemfile.lock
+
+.ai

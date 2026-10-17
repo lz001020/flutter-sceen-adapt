@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Flutter ${{ matrix.flutter }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        flutter: ['3.22.3', '3.35.7']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ matrix.flutter }}
+          channel: stable
+          cache: true
+      - name: Resolve dependencies
+        run: |
+          flutter pub get
+          (cd example && flutter pub get)
+          (cd demo && flutter pub get)
+      - name: Check formatting
+        if: matrix.flutter == '3.35.7'
+        run: dart format --output=none --set-exit-if-changed lib test example/lib example/test demo/lib demo/test
+      - name: Analyze and test core
+        run: |
+          flutter analyze
+          flutter test
+      - name: Analyze and test example
+        working-directory: example
+        run: |
+          flutter analyze
+          flutter test
+      - name: Analyze and test demo
+        working-directory: demo
+        run: |
+          flutter analyze
+          flutter test
+      - name: Check whitespace
+        run: git diff --check
+      - name: Validate pub package
+        if: matrix.flutter == '3.35.7'
+        run: flutter pub publish --dry-run
