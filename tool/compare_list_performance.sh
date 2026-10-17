@@ -79,6 +79,10 @@ run_case() {
   adb -s "$device_id" install -r "$apk_path" >/dev/null
   adb -s "$device_id" logcat -c
   adb -s "$device_id" shell am force-stop "$package_name"
+  if [[ "${PERF_REQUIRE_PORTRAIT:-0}" == "1" ]]; then
+    python3 "$repo_dir/tool/android_display_state.py" "$device_id" \
+      "${report%.txt}_display-before.txt"
+  fi
   adb -s "$device_id" shell am start -n "$component_name" >/dev/null
   sleep 4
 
@@ -112,6 +116,11 @@ run_case() {
     done
   fi
   sleep 1
+
+  if [[ "${PERF_REQUIRE_PORTRAIT:-0}" == "1" ]]; then
+    python3 "$repo_dir/tool/android_display_state.py" "$device_id" \
+      "${report%.txt}_display-after.txt"
+  fi
 
   adb -s "$device_id" logcat -d -s flutter | \
     rg '\[demo:list_performance\]|Unhandled Exception|ERROR' > "$report" || true

@@ -1,6 +1,53 @@
 # 性能验证
 
-性能实验现位于独立 benchmark 工程，脚本已切换宿主。下文 2026-09-14 数据属于迁移前历史记录；当前版本已于 2026-10-13 完成小米 14 Profile 复验，结果如下。
+当前入口：[核心测试与验证](../doc/testing.md)说明承诺、分层与通过标准；[发布前最终复核](performance-final-20261015.md)提供页面对齐、Timeline 诊断及最新三轮数据。规则优化组 total p90 中位数：父级 5.130 / 4.963ms，局部 5.057 / 4.943ms（design_scale / ScreenUtil）。新增复杂图文父级更新中为 4.262 / 4.467ms；复杂度放大了静态子树复用差异，但两库优化组仍接近，不能宣称本库普遍领先。残余差异尚未完全归因，vivo 异常仍未关闭。
+
+方向核查补充：2026-10-15 首批首尾有效显示方向从 rotation 0 变为 rotation 1，未逐组记录方向。本批耗时不作为性能回退或稳定库间差异的正式判据，需固定方向后复验；详见正式报告开头的补充说明。
+
+修正页面布局参数前的 [小米 14 锁定竖屏复验](performance-conclusion-portrait-20261015.md)保留为历史批次：共 24 组更新专项和 6 组复杂信息流。信息流 total p90 中位数基本相同；该批局部优化组 design_scale 较低，父级优化组 ScreenUtil 较低。更新专项应优先参考上述最新批次，不能混合不同批次排名。
+
+性能实验现位于独立 benchmark 工程，脚本已切换宿主。下文 2026-09-14 数据属于迁移前历史记录；当前版本已于 2026-10-13 完成小米 14 Profile 复验，2026-10-14 补测 vivo，结果如下。日志中的 `screen_adapt` 是 design_scale 的历史采样标签。
+
+新增的公平构建对照见 [构建与业务更新专项](update-performance-design.md)：父级重建及局部价格更新，各包含 design_scale const/动态和 ScreenUtil 优化/动态四组。历史 const/inline 重建报告保留，不作为新四组对照的结论。
+
+## 2026-10-14 vivo 真机补测
+
+设备上报 vivo V2361A / SM7550 / Android 16。物理分辨率 1260×2800，测试沿用已有 1080×2400 override，480dpi（DPR 3）；运行期间显示采样为 60Hz。Flutter 3.35.7 / Dart 3.9.2，Profile，源码提交 `8f796cf`。未修改设备分辨率、密度或刷新率设置。与小米 14 使用同一套脚本和场景，但显示配置不同，不能直接按帧耗时评定两台设备的性能档位。
+
+| 场景 | design_scale total p90 | flutter_screenutil total p90 | 证据与限制 |
+| --- | ---: | ---: | --- |
+| 常规固定行列表 | 5.879ms | 6.082ms | 各 1 轮，603 / 603 帧，>16.667ms 为 2 / 3 帧 |
+| 快速滚动首次 | 11.016ms | 12.818ms | 各 3 轮中位数；第三轮两者均严重波动，不能标为稳定通过 |
+| 快速滚动复验 | 12.473ms | 11.947ms | 各 3 轮中位数；design_scale 第三轮再次出现严重波动 |
+| 混合信息流 | 11.036ms | 11.253ms | 各 3 轮中位数，433 / 431 帧，差异约 1.9%，表现接近 |
+| const / inline 高频重建 | 9.436ms | 26.900ms | 各 1 轮，600 / 602 帧；后者 raster 明显增大，不据此归因为适配算法 |
+
+设计稿切换与 30 次原生拖动通过脚本默认门槛：422 帧，total p90 5.830ms、p99 9.523ms，>16.667ms 为 1 帧。列表对照只记录指标，没有自动通过门槛；脚本退出成功不代表所有场景均通过性能验收。
+
+### 快速滚动的重复波动
+
+| 批次 / 实现 | 三轮 total p90（ms） | 三轮 >16.667ms 帧数 |
+| --- | --- | --- |
+| 首次 design_scale | 9.442 / 11.016 / 26.629 | 3 / 3 / 188 |
+| 首次 ScreenUtil | 11.290 / 12.818 / 26.713 | 4 / 7 / 184 |
+| 复验 design_scale | 11.364 / 12.473 / 26.466 | 5 / 3 / 187 |
+| 复验 ScreenUtil | 10.311 / 11.947 / 12.352 | 3 / 5 / 4 |
+
+首次第三轮 raster p90 为 18.537 / 18.316ms，复验 design_scale 第三轮为 17.985ms。重建场景 ScreenUtil raster p90 18.789ms，>16.667ms 为 594/602 帧。长帧确实存在，不能用三轮中位数掩盖。两批快速滚动中位数的优劣方向发生变化，目前不支持稳定性能领先结论。
+
+间歇采样的 Thermal Status 为 0，复验实时 HAL 电池约 30.6°C、GPU 约 37°C，显示 modeId 4（60Hz）。HAL 还返回了较早的 cached temperatures，应与实时值区分。采样未与每个长帧同步，不能排除或证实调度、驱动、温控等原因；需要进一步用 DevTools/系统 trace 定位。此处只记录观测，不把问题归为核心缺陷或系统缺陷。
+
+混合信息流各轮 total p90：design_scale 为 11.036 / 11.092 / 10.839ms，ScreenUtil 为 11.181 / 11.253 / 11.521ms；各轮长帧为 4/6/7 与 5/4/8。中位数 p99 为 17.965 / 17.112ms，仍有长尾，不等同于零丢帧。
+
+原始报告、逐轮 JSON、构建日志及设备状态位于 `build/s3-performance-vivo-20261014/`，汇总为 `summary.json`，首次快速结果保留在目录根部，复验原始报告在 `fast-retry/`。本地产物不进入发布包。复现命令：
+
+```sh
+./tool/run_android_performance.sh 10CEAR1BG8000H9
+./tool/compare_list_performance.sh 10CEAR1BG8000H9
+./tool/compare_fast_list_performance.sh 10CEAR1BG8000H9
+zsh tool/compare_mixed_feed_performance.sh 10CEAR1BG8000H9
+./tool/compare_rebuild_performance.sh 10CEAR1BG8000H9
+```
 
 
 ## 2026-10-13 当前版本复验
@@ -99,7 +146,7 @@ adb -s emulator-5554 shell dumpsys gfxinfo dev.screenadapt.benchmark
 ## 当前范围
 
 - 微基准覆盖 MediaQuery 指标适配的热路径
-- 已有小米 14 列表场景测量；严格高刷门槛、多指高频输入和跨设备性能基线尚未建立
+- 已有小米 14 与 vivo V2361A 列表测量；vivo 快速滚动和重建存在未定位的 raster 波动。严格高刷门槛、多指高频输入和受控跨设备性能基线尚未建立
 - 性能数据只能在相同设备和 Profile 模式下横向比较，不能用 Debug 模式结论代表发布性能
 
 ## 复杂列表对比

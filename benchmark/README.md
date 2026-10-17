@@ -17,10 +17,22 @@ flutter build apk --profile
 | 指针/设计稿切换帧采集 | lib/main.dart |
 | 复杂列表 | lib/performance/screen_adapt_list_main.dart、screenutil_list_main.dart |
 | const 高频重建 | lib/performance/screen_adapt_rebuild_main.dart、screenutil_rebuild_main.dart |
+| 公平更新专项 | lib/performance/update_benchmark_main.dart；规则父级更新、局部价格更新、复杂图文父级更新，各四种写法 |
 
 仓库根目录的 tool/*performance.sh 已改为构建、安装本工程，不再覆盖 example 应用。
 必须同设备、Profile 模式、相同操作比较；历史报告不代表迁移后的性能结论。
 设备未连接时脚本会失败，不伪造测量通过。性能条件详见 ../docs/performance-validation.md。
+
+当前核心测试规范见 [核心测试与验证](../doc/testing.md)，更新专项的分组、工作量与诊断开关见 [专项设计](../docs/update-performance-design.md)。新增复杂父级更新专项的逐轮结果见 [性能复核](../docs/performance-final-20261015.md)。历史高频重建压力测试保留，不混入公平优化对照排名。
+
+复杂图文父级更新为可选场景：
+
+```sh
+python3 ../tool/run_portrait_performance.py <adb-device> \
+  --updates-only --rounds 3 --scenarios complexParentRebuild
+```
+
+它使用 12 张本地混合图文卡片，测量图片已缓存后的父级更新；首次图片解码、网络和功耗不在该场景内。
 
 ## 混合信息流对比
 

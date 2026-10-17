@@ -1,5 +1,7 @@
 # 移动端回归
 
+核心承诺、测试分层及性能结论边界见 [核心测试与验证](../doc/testing.md)。本页提供设备操作细节；逐轮结果由 [发布清单](../docs/release-checklist.md)记录。
+
 先运行 flutter analyze 和 flutter test，再在 Android/iOS 目标设备执行：
 
 | 场景 | 操作与观察 |
