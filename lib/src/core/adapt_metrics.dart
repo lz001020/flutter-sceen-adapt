@@ -5,6 +5,7 @@ import 'adapt_config.dart';
 /// Immutable output of one adaptation calculation.
 @immutable
 class AdaptMetrics {
+  /// Creates a snapshot. Production snapshots are supplied by the binding.
   const AdaptMetrics({
     required this.config,
     required this.origin,
@@ -12,9 +13,16 @@ class AdaptMetrics {
     required this.scale,
   });
 
+  /// Configuration used for this calculation.
   final AdaptConfig config;
+
+  /// Device-logical metrics before adaptation.
   final MediaQueryData origin;
+
+  /// Design-logical metrics used for rendering, MediaQuery and input.
   final MediaQueryData adapted;
+
+  /// UI scale: adapted DPR equals original DPR multiplied by this value.
   final double scale;
 }
 

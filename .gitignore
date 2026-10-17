@@ -1,6 +1,10 @@
 # Miscellaneous
 # Local personal archive: resumes, interview preparation and learning notes.
 /archive/personal/
+/.local-archive/
+/.ai/
+/text.txt
+/tool/picker_cache/
 *.class
 *.lock
 *.log
@@ -126,3 +130,5 @@ app.*.symbols
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 !/dev/ci/**/Gemfile.lock
+
+.ai

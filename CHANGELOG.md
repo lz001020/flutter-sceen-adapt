@@ -16,7 +16,14 @@ Breaking changes (release preparation; not yet published):
 - Notify enable changes even at scale 1; refresh snapshots on system font changes.
 - Move performance experiments and ScreenUtil dependency to benchmark/ with
   separate Android/iOS application identifiers and build output.
-- Require Flutter >=3.35.0 and Dart >=3.9.0; validated using Flutter 3.35.7.
+- Require Flutter >=3.22.0 and Dart >=3.4.0; core, example and benchmark are
+  validated using Flutter 3.22.3 / Dart 3.4.4. Device checks use Flutter 3.35.7.
+- Restrict binding configuration and pointer diagnostics to debug mode.
+- Document initialization, controller ownership, font policy and validation
+  boundaries in the bundled doc/ guides. Correct the custom binding example
+  to instantiate its class directly; static initializers are not inherited.
+- Add equal-workload update benchmarks and portrait checks in the repository.
+  These experiments do not establish a universal advantage over ScreenUtil.
 
 ## 0.1.0
 

@@ -16,7 +16,7 @@ import '../core/adapt_controller.dart';
 import '../scope/adapt_scope.dart';
 
 /// 屏幕适配的核心 mixin，可与其它自定义 [WidgetsFlutterBinding] mixin 组合使用，
-/// 解决和其它依赖自定义 binding 的插件互斥的问题。
+/// 组合前应检查其他 mixin 的 view 配置、根包装和指针回调行为。
 ///
 /// 用法：
 /// ```dart
@@ -25,7 +25,7 @@ import '../scope/adapt_scope.dart';
 ///
 /// void main() {
 ///   DesignSizeBindingMixin.configure(designSize: const Size(360, 690));
-///   AppBinding.ensureInitialized();
+///   AppBinding();
 ///   runApp(const MyApp());
 /// }
 /// ```
@@ -45,7 +45,8 @@ mixin DesignSizeBindingMixin on WidgetsFlutterBinding {
   /// 在 binding 实例化前调用，用于把设计稿配置传给 mixin。
   ///
   /// 用 [DesignSizeWidgetsFlutterBinding.ensureInitialized] 时不需要自己调；
-  /// 自行组合 binding 时必须在 `ensureInitialized()` 之前调一次。
+  /// 自行组合 binding 时必须在创建实例之前调一次；只用于初始化，
+  /// 运行时更新应使用 [AdaptController.configure]。
   static void configure({
     required Size designSize,
     ScreenAdaptType adaptType = ScreenAdaptType.min,
@@ -80,11 +81,13 @@ mixin DesignSizeBindingMixin on WidgetsFlutterBinding {
     final BoxConstraints physicalConstraints =
         BoxConstraints.fromViewConstraints(view.physicalConstraints);
     final double devicePixelRatio = _adaptedDpr;
-    debugPrint(
-      '[design_scale][view_config] view=${view.viewId} '
-      'physical=${view.physicalSize} logical=${physicalConstraints / devicePixelRatio} '
-      'dpr=$devicePixelRatio scale=${_adaptController.metrics?.scale ?? 1}',
-    );
+    if (kDebugMode) {
+      debugPrint(
+        '[design_scale][view_config] view=${view.viewId} '
+        'physical=${view.physicalSize} logical=${physicalConstraints / devicePixelRatio} '
+        'dpr=$devicePixelRatio scale=${_adaptController.metrics?.scale ?? 1}',
+      );
+    }
     return ViewConfiguration(
       physicalConstraints: physicalConstraints,
       logicalConstraints: physicalConstraints / devicePixelRatio,
@@ -150,7 +153,8 @@ mixin DesignSizeBindingMixin on WidgetsFlutterBinding {
         _getAdaptedDevicePixelRatio,
       );
       for (final event in events) {
-        if (event is PointerDownEvent || event is PointerUpEvent) {
+        if (kDebugMode &&
+            (event is PointerDownEvent || event is PointerUpEvent)) {
           debugPrint(
             '[design_scale][pointer] type=${event.runtimeType} '
             'view=${event.viewId} position=${event.position} '
@@ -262,6 +266,8 @@ class DesignSizeWidgetsFlutterBinding extends WidgetsFlutterBinding
   /// 这是在 `main` 函数中启动屏幕适配的首选方法。
   /// 重复调用复用已有适配 binding 和 Controller，并更新配置。
   /// 已有其他类型的 WidgetsBinding 时抛出 [FlutterError]。
+  /// 设计尺寸必须有限且大于零，默认策略为 [ScreenAdaptType.min]。
+  /// 应在其他 binding 初始化及 runApp 之前调用。
   static WidgetsBinding ensureInitialized(
     Size size, {
     ScreenAdaptType type = ScreenAdaptType.min,

@@ -4,7 +4,12 @@ import 'adapt_metrics.dart';
 import 'adapt_config.dart';
 
 /// Owns adaptation state without reading a FlutterView or calling a binding.
+///
+/// Use [of] in build methods and [read] in callbacks. The binding owns the
+/// controller returned by these lookups; application code must not dispose it.
+/// Independently constructed controllers do not acquire device metrics.
 class AdaptController extends ChangeNotifier {
+  /// Creates a controller and validates [config] before accepting it.
   AdaptController({required AdaptConfig config}) : _config = config {
     config.validate();
   }
@@ -14,6 +19,9 @@ class AdaptController extends ChangeNotifier {
   MediaQueryData? _origin;
   bool _enabled = true;
 
+  /// Returns the controller and subscribes this context to state changes.
+  ///
+  /// Throws [FlutterError] when the context is outside the adaptation root.
   static AdaptController of(BuildContext context) {
     final controller = maybeOf(context);
     if (controller == null) {
@@ -22,17 +30,28 @@ class AdaptController extends ChangeNotifier {
     return controller;
   }
 
+  /// Subscribes to state changes, or returns null outside the adaptation root.
   static AdaptController? maybeOf(BuildContext context) => context
       .dependOnInheritedWidgetOfExactType<AdaptControllerScope>()
       ?.controller;
 
+  /// Reads without subscribing, or returns null outside the adaptation root.
   static AdaptController? read(BuildContext context) =>
       context.getInheritedWidgetOfExactType<AdaptControllerScope>()?.controller;
 
+  /// Current configuration, retained while adaptation is disabled.
   AdaptConfig get config => _config;
+
+  /// Current device snapshot, or null when no view snapshot is available.
   AdaptMetrics? get metrics => _metrics;
+
+  /// Whether adaptation is enabled; a scale of one does not imply disabled.
   bool get enabled => _enabled;
 
+  /// Applies a valid configuration and enables adaptation.
+  ///
+  /// Invalid input throws [ArgumentError] before state changes. Applying the
+  /// same configuration while enabled does not notify listeners.
   void configure(AdaptConfig config) {
     config.validate();
     if (_config == config && _enabled) return;
@@ -41,9 +60,14 @@ class AdaptController extends ChangeNotifier {
     _recalculate();
   }
 
+  /// Changes design dimensions, retains other settings and enables adaptation.
   void setDesignSize(Size size) =>
       configure(_config.copyWith(designSize: size));
 
+  /// Toggles adaptation while retaining configuration.
+  ///
+  /// Disabling restores device coordinates. Repeating the current value does
+  /// not notify listeners; later device changes preserve the disabled state.
   void setEnabled(bool value) {
     if (_enabled == value) return;
     _enabled = value;

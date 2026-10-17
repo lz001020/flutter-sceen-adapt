@@ -8,7 +8,12 @@ example/.idea/
 docs/
 .ai/
 example/img*.png
+/img.png
+/text.txt
+/.github/
+/CONTRIBUTING.md
 
 archive/
 benchmark/
 tool/
+.local-archive/

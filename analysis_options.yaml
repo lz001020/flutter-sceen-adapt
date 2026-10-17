@@ -30,3 +30,4 @@ linter:
 analyzer:
   exclude:
     - archive/**
+    - build/**

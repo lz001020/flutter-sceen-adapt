@@ -3,6 +3,7 @@
 - 只承诺 Android / iOS 单窗口核心链路，Web、桌面、多 view 不在范围内。
 - binding 接管 onPointerDataPacket；初始化前的回调会链式调用，初始化后插件直接覆盖会绕过适配。已有两项回归测试确认此行为，接入插件时必须检查初始化顺序。
 - 90/120Hz 真机上的重采样、复杂多指和快速拖动仍需设备验证。
+- 不承诺比 ScreenUtil 普遍更快。小米竖屏专项曾观察到父级更新耗时差异，vivo 快速滚动出现过未定位的 raster 长帧；采样完成不代表跨设备稳定性能通过。最新证据见 [性能验证](https://github.com/lz001020/flutter-sceen-adapt/blob/HEAD/docs/performance-validation.md)。
 - 横屏会交换设备宽高参与缩放；设计稿本身为横屏时需验证业务预期。
 - 不提供任意 PlatformView / WebView / 地图兼容承诺；补偿扩展已归档。
 - Android profile/release 自动交互与 iOS 26.5 模拟器原生交互已通过，见 [发布清单](https://github.com/lz001020/flutter-sceen-adapt/blob/HEAD/docs/release-checklist.md)。

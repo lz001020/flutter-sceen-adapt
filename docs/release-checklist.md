@@ -1,9 +1,11 @@
 # 0.2.0 发布验收
 
-验收日期：2026-10-11 至 2026-10-13。
+验收日期：2026-10-11 至 2026-10-15。
+
+2026-10-15 最终源码复核：三工程分析与 25+5+7 项测试通过；小米竖屏规则更新专项 24 组、4320 帧，新增复杂图文父级更新 12 组、2160 帧，计数及方向检查通过；Android profile/release 原生交互各 19 项通过，设置恢复成功。布局公平性修正、绘制隔离诊断与复杂场景差异见 [最终报告](performance-final-20261015.md)。核心测试文档为 [doc/testing.md](../doc/testing.md)；不将性能采集完成标为跨设备稳定通过。
 
 本轮为发布准备，不执行上传、发布或推送。S1/S2 已实现并完成核心回归；扩展已归档。
-S3 已完成本轮范围：工程分离、小米 14 Profile 性能复验、Android 五种屏幕配置及 iOS 26.5 三档模拟器原生交互。S4 的独立候选快照全量预检通过，pub dry-run 为 0 warnings；原工作区仍有历史混合暂存改动，未提交、推送或发布。iOS 真机不纳入本轮，iOS 27 原生交互问题后续处理。
+S3 已完成本轮范围：工程分离、小米 14 Profile 性能复验、Android 五种屏幕配置及 iOS 26.5 三档模拟器原生交互。S4 的独立候选快照全量预检通过，pub dry-run 为 0 warnings；原工作区仍有未提交改动，本轮未提交、推送或发布。iOS 真机不纳入本轮，iOS 27 原生交互问题后续处理。
 
 ## 已执行
 
@@ -16,12 +18,14 @@ S3 已完成本轮范围：工程分离、小米 14 Profile 性能复验、Andro
 | Android 自动交互回归（2026-10-13） | 同一 Android 16 真机 profile/release 各 19 项检查全部通过。覆盖 320/375/768 设计宽度、触点内部/边缘/外部、适配开关、拖动、横竖屏切换及键盘、系统字号跟随/忽略/补偿；两轮旋转和字号设置均恢复成功。范围不含人工视觉、高刷、多指、插件冲突或 iOS |
 | iOS 模拟器核心回归（2026-10-13） | iPhone 17 Pro / iOS 26.5、iPhone 18 Pro / iOS 27.0，各 11 项核心及 1 项 binding 冲突检查通过，共 24 项，模式 debug。触点为 Dart 指针包注入；不作为原生交互或 AOT 真机验收 |
 | example 测试 | 5 项通过，移除扩展测试后保留核心页面 |
-| benchmark 测试 | 纯计算 10000 次微基准及混合信息流布局测试通过，计算结果不作为设备帧性能结论 |
+| benchmark 测试 | 7 项通过，含纯计算微基准、混合信息流布局和复杂父级更新 build/几何验证；设备帧数据单独采集 |
 | 根工程、example、benchmark 分别静态分析 | 均无问题 |
 | example Android Profile 构建 | 通过，com.example.example |
 | benchmark 默认 Android Profile 构建 | 通过，dev.screenadapt.benchmark |
 | benchmark 四个列表/重建对照入口 Profile 构建 | 全部通过，保留原采样工作量 |
-| pub.dev 发布 dry-run | 原工作区两类 Git 状态警告；独立干净候选快照退出码 0、0 warnings，约 59 KB |
+| 小米专项复验（2026-10-15） | 规则更新两场景 × 四写法 × 三轮，共 24 组、4320 帧；复杂图文父级更新 × 四写法 × 三轮，共 12 组、2160 帧；另有同负载绘制隔离诊断 12 组。计数及竖屏方向检查通过，旋转设置恢复成功。benchmark 7 项测试和静态分析通过。复杂页不是虚拟化长列表，性能边界见[最终报告](performance-final-20261015.md) |
+| vivo 性能补测（2026-10-14） | V2361A / SM7550 / Android 16 / 1080×2400 / 60Hz；设计稿切换与拖动通过默认门槛，常规列表、快速滚动及复验、混合信息流、重建对照已采集。快速滚动与重建有明显 raster 波动，未定位，不标为稳定通过，见 [性能验证](performance-validation.md#2026-10-14-vivo-真机补测) |
+| pub.dev 发布 dry-run | 最终独立干净候选退出码 0、0 warnings，约 68 KB；原工作区尚有未提交文件 |
 | APK 16 KB ZIP 对齐 | 两工程 zipalign -c -P 16 4 通过；未把 ZIP 检查等同于本轮 ELF 段检查 |
 | Android Gradle 配置 | 保留实际生效的 Groovy：AGP 8.6.1、Gradle 8.7、Kotlin 2.1.0；移走冲突的 Kotlin DSL 文件至 archive/build-config |
 | 发布包内容 | dry-run 清单未包含 archive、benchmark、tool、docs 或局部扩展；核心仅保留 6 个 Dart 文件 |
@@ -31,7 +35,7 @@ S3 已完成本轮范围：工程分离、小米 14 Profile 性能复验、Andro
 
 1. **本轮设备与性能验收完成**：小米 14 性能及 Android/iOS 阶梯配置已通过，见 [设备矩阵](device-matrix.md)。高刷严格帧预算、复杂多指和任意插件组合列为未验证边界，不作支持承诺。
 2. **iOS 构建有可复现路径**：`zsh tool/build_ios_simulator.sh example` / `benchmark` 均通过 arm64 构建及架构检查，benchmark 安装启动通过。通用双架构命令的 lipo 校验问题仍记录为工具链限制；未修改 SDK 或伪称通用构建已修复。
-3. **主仓库历史待整理提交**：不覆盖原暂存区。`tool/prepare_release_candidate.py` 按当前有效文件生成独立 Git 快照与 SHA-256 清单；已完成干净快照全量分析、25+5+2 项测试和 dry-run。原仓库未因此变干净；正式发布前仍需审阅提交或明确采用已验证候选快照。
+3. **主仓库历史待整理提交**：不覆盖原暂存区。`tool/prepare_release_candidate.py` 按当前有效文件生成独立 Git 快照与 SHA-256 清单；已完成干净快照全量分析、25+5+7 项测试和 dry-run。原仓库未因此变干净；正式发布前仍需审阅提交或明确采用已验证候选快照。
 4. **发布身份和决策待确认**：0.2.0、pub.dev 地址与仓库地址一致。按用户要求 LICENSE 已改为 `Copyright (c) 2026 lz001020`。改名前 screen_adapt 的公开 API 返回 HTTP 404，未发现已有包记录；不等于保证可注册，登录身份与最终包名校验由服务端确认。本轮没有上传或发布。
 
 ## 发布候选证据
@@ -149,3 +153,17 @@ zsh tool/run_binding_initialization_android.sh <device-id>
 ## 随包使用文档
 
 精选使用文档位于 `doc/`：usage、concepts、migration-0.2、troubleshooting、known-issues。README 已链接包内文档；指向内部架构、归档和发布清单的链接使用 GitHub 地址。内部 `docs/` 仍排除。pub 要求单数 doc，最初 docs 方案的警告已解决。最新候选为 `build/release-candidate-20261014011414/source`，同级 validation.log 记录 dry-run 退出码 0、0 warnings。此轮只调整文档与打包，未重复执行行为测试。
+
+## 2026-10-15 最终测试与文档收敛
+
+完整预检候选 `build/release-candidate-20261015010015/source`：三工程分析通过，核心 25、example 5、benchmark 5 项测试通过，pub dry-run 0 warnings。其 Dart 源码与最终设备回归源码一致；Android profile/release 各 19 项通过，报告见 [最终复核](performance-final-20261015.md)。
+
+按用户要求，设备测试全部结束后再完成文档优化。最终文档候选 `build/release-candidate-20261015010833/source` 相对完整预检仅变更 Markdown，未重复行为测试；同级 `packaging.log` 记录 pub dry-run 退出码 0、0 warnings、约 66 KB。`doc/testing.md` 随包，`docs/`、benchmark、tool、archive 与用户 `img.png` 排除。原仓库未提交、推送或发布。本段属于不随包的验收记录，追加于候选生成后。
+
+## 开源发布审阅补齐（2026-10-15）
+
+补齐发布前本地安装、运行示例、贡献指南与 Issue/PR 模板；公开 API 注释说明默认策略、状态更新和 Controller 所有权。修正自定义 binding 的静态方法示例，并排除 build 生成快照参与分析。CHANGELOG 同步生产日志清理；text.txt 与贡献模板不进入 pub 包，原文件保留。
+
+完整预检候选 `build/release-candidate-20261015014806/source`：三工程静态分析通过，25+5+5 项现有测试通过，pub dry-run 0 warnings。最后两处文档措辞修订形成 `build/release-candidate-20261015093537/source`，仅 Markdown 变化；同级 packaging.log 记录退出码 0、0 warnings、约 68 KB，发布清单排除内部资料。本轮无新增运行时逻辑，不重复设备验证；未提交或发布。本段为候选生成后追加的内部验收记录。
+
+2026-10-15 复杂图文专项后发布包复核：最终清单候选 `build/release-candidate-20261015213458/source`；pub dry-run 退出码 0、0 warnings、约 69 KB，`doc/testing.md` 随包，benchmark、tool、archive 与本地 `text.txt` 未进入包。此候选之后仅追加本段内部验收记录；未提交、上传或发布。

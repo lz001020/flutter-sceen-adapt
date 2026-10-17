@@ -8,6 +8,9 @@
 `min` 按两者短边计算。延续原有移动端公式：设备横屏时先交换设备宽高参与计算。
 设计稿自身为横屏时也使用此规则，接入前应验证期望布局。
 
+`AdaptConfig` 默认 `width`，内置 binding 初始化及 mixin 配置默认 `min`。
+推荐显式指定策略；`min` 表示短边之比，不是宽高两个缩放比中的较小值。
+
 适配后 DPR = 原始 DPR × scale，逻辑尺寸 = 原始逻辑尺寸 ÷ scale。
 键盘 viewInsets、安全区 padding/viewPadding 同比例转换，物理触点使用同一快照的 DPR。
 
@@ -50,6 +53,8 @@ void main() {
 ```
 
 只创建一次，适配 mixin 放在组合列表最后；它接管 view 配置和根包装。
+上例直接调用构造函数创建自定义 binding；Dart 静态初始化方法不会被子类继承。
+组合并不保证任意插件兼容，尤其应检查其他 mixin 是否依赖被覆盖的根包装或 view 配置。
 不要先创建普通 WidgetsFlutterBinding 再初始化适配 binding。
 重复调用内置 ensureInitialized 会复用 binding 并应用传入配置。
 
